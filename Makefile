@@ -1,4 +1,3 @@
-.ONESHELL:
 BINARY := ipmi-catcher
 MAINMODULE := github.com/metal-stack/ipmi-catcher
 COMMONDIR := $(or ${COMMONDIR},../builder)
