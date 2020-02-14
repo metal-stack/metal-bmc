@@ -14,7 +14,8 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v1
     - name: Docker Image
-      run: |
-        docker login -u metalstackci -p ${{ secrets.DOCKER_HUB_TOKEN }}
-        make dockerimage
-        make dockerpush
+      uses: metalstack/action-docker-make
+      with:
+        username: metalstackci
+        password: ${{ secrets.DOCKER_HUB_TOKEN }}
+        args: --Lint --summary

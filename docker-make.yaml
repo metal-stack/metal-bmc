@@ -1,0 +1,11 @@
+---
+version: '1'
+name: ipmi-catcher
+username: metalstack
+registry-host: docker.io
+default-build-name: "ipmi-catcher"
+builds:
+  -
+    name: "ipmi-catcher-master"
+    tags:
+      - latest
