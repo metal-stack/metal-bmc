@@ -1,6 +1,7 @@
 .ONESHELL:
 BINARY := ipmi-catcher
-COMMONDIR := $(or ${COMMONDIR},../common)
+MAINMODULE := github.com/metal-stack/ipmi-catcher
+COMMONDIR := $(or ${COMMONDIR},../builder)
 DOCKER_TAG := $(or ${GITHUB_TAG_NAME}, latest)
 
 include $(COMMONDIR)/Makefile.inc
