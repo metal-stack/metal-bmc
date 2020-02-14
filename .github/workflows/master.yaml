@@ -14,7 +14,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v1
     - name: Docker Image
-      uses: metalstack/action-docker-make@v0.1.3
+      uses: metal-stack/action-docker-make@v0.1.3
       with:
         username: metalstackci
         password: ${{ secrets.DOCKER_HUB_TOKEN }}
