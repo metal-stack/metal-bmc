@@ -19,4 +19,4 @@ jobs:
       with:
         username: metalstackci
         password: ${{ secrets.DOCKER_HUB_TOKEN }}
-        args: --no-lint --build-only=release
+        args: --no-lint -b=release
