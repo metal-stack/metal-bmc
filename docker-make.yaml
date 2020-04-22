@@ -3,9 +3,13 @@ version: '1'
 name: ipmi-catcher
 username: metalstack
 registry-host: docker.io
-default-build-name: "ipmi-catcher"
+default-build-name: latest
 builds:
   -
-    name: "ipmi-catcher-master"
+    name: latest
     tags:
       - latest
+  -
+    name: release
+    tags:
+      - $GIT_TAG_NAME

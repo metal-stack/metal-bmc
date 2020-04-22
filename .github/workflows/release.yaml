@@ -1,9 +1,7 @@
-name: Build image from master
+name: Build image from release tag
 
 on:
   push:
-    branches:
-      - master
     tags:
       - "v*"
 
@@ -12,10 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
+    - uses: olegtarasov/get-tag@v2
+      id: tagName
     - name: Docker Image
       uses: metal-stack/action-docker-make@master
       with:
         username: metalstackci
         password: ${{ secrets.DOCKER_HUB_TOKEN }}
-        args: --no-lint -b master
+        args: --no-lint -b release
