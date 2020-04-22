@@ -3,10 +3,10 @@ version: '1'
 name: ipmi-catcher
 username: metalstack
 registry-host: docker.io
-default-build-name: latest
+default-build-name: master
 builds:
   -
-    name: latest
+    name: master
     tags:
       - latest
   -
