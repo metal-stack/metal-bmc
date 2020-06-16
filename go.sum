@@ -221,6 +221,8 @@ github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5
 github.com/metal-stack/metal-go v0.7.5/go.mod h1:m6C449pxIMkm44zBfd1llx+BHzrY1ylfUxdLlleTwmk=
 github.com/metal-stack/metal-go v0.7.6-0.20200616061511-867c2ddfb854 h1:6fK9t3fuQKJafbCDj8AikpUSriJk1KOPX1l84gDboiw=
 github.com/metal-stack/metal-go v0.7.6-0.20200616061511-867c2ddfb854/go.mod h1:m6C449pxIMkm44zBfd1llx+BHzrY1ylfUxdLlleTwmk=
+github.com/metal-stack/metal-go v0.7.6 h1:kFn9CRaTugq/2FNO7d93j4+Eh+Gun/78PCYTLJd09vw=
+github.com/metal-stack/metal-go v0.7.6/go.mod h1:m6C449pxIMkm44zBfd1llx+BHzrY1ylfUxdLlleTwmk=
 github.com/metal-stack/security v0.3.0 h1:YJL0qlsXlvA9O3iIWuk5YqF02IX9f6I60n93FkQpV4k=
 github.com/metal-stack/security v0.3.0/go.mod h1:xa0eka4HttrfhDTJPzcSDBGgaFyNBGXhz0B5YGqtKuU=
 github.com/metal-stack/v v1.0.2 h1:IGtLAGtazQd8r0i/5+YNjBJUEIZYrbVxynY9EXrlTV4=

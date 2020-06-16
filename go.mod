@@ -5,8 +5,7 @@ go 1.14
 require (
 	github.com/go-openapi/spec v0.19.8 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
-	// FIXME set to released version once merged
-	github.com/metal-stack/metal-go v0.7.6-0.20200616061511-867c2ddfb854
+	github.com/metal-stack/metal-go v0.7.6
 	github.com/metal-stack/v v1.0.2
 	github.com/stretchr/testify v1.6.1
 	go.mongodb.org/mongo-driver v1.3.1 // indirect
