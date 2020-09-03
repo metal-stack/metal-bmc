@@ -1,7 +1,7 @@
 package leases
 
 import (
-	"fmt"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"time"
 )
@@ -34,7 +34,7 @@ func ReadLeases(leaseFile string) (Leases, error) {
 	leasesContent := mustRead(leaseFile)
 	leases, err := Parse(leasesContent)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse leases file, err: %v", err)
+		return nil, errors.Wrapf(err, "could not parse leases file")
 	}
 	return leases, nil
 }

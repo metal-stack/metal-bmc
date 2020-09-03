@@ -3,6 +3,7 @@ package ipmi
 import (
 	"fmt"
 	"github.com/metal-stack/go-hal/detect"
+	"github.com/pkg/errors"
 	"regexp"
 	"strings"
 	"sync"
@@ -92,12 +93,12 @@ func parseUUIDLine(l string) string {
 func (u UUIDCache) loadUUID(ip string, port int, user, password string) (string, error) {
 	ob, err := detect.ConnectOutBand(ip, port, user, password)
 	if err != nil {
-		return "", fmt.Errorf("could not open out-band connection to ip:%s, port:%d, user: %s, err: %v", ip, port, user, err)
+		return "", errors.Wrapf(err, "could not open out-band connection to ip:%s, port:%d, user: %s", ip, port, user)
 	}
 
 	info, err := ob.DmiInfo()
 	if err != nil {
-		return "", fmt.Errorf("failed to get dmi data from ip:%s, err: %v", ip, err)
+		return "", errors.Wrapf(err, "failed to get dmi data from ip:%s", ip)
 	}
 
 	for _, l := range info {
