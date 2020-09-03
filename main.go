@@ -38,7 +38,7 @@ func main() {
 	for m, l := range leasesByMac {
 		macToIps[m] = l.Ip
 	}
-	uuidCache := ipmi.NewUUIDCache(cfg.IpmiUser, cfg.IpmiPassword, cfg.SumBin)
+	uuidCache := ipmi.NewUUIDCache(cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
 	uuidCache.Warmup(macToIps)
 
 	r, err := reporter.NewReporter(&cfg, &uuidCache, log)

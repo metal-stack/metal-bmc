@@ -1,9 +1,8 @@
 package ipmi
 
 import (
-	"bufio"
 	"fmt"
-	"os/exec"
+	"github.com/metal-stack/go-hal/detect"
 	"regexp"
 	"strings"
 	"sync"
@@ -21,9 +20,9 @@ var (
 
 type UUIDCache struct {
 	macToUUID    map[string]string
+	ipmiPort     int
 	ipmiUser     string
 	ipmiPassword string
-	sumBin       string
 	log          *zap.SugaredLogger
 }
 
@@ -32,13 +31,13 @@ type entry struct {
 	uuid string
 }
 
-func NewUUIDCache(ipmiUser, ipmiPassword, sumBin string) UUIDCache {
+func NewUUIDCache(ipmiPort int, ipmiUser, ipmiPassword string) UUIDCache {
 	z, _ := zap.NewProduction()
 	return UUIDCache{
 		macToUUID:    map[string]string{},
+		ipmiPort:     ipmiPort,
 		ipmiUser:     ipmiUser,
 		ipmiPassword: ipmiPassword,
-		sumBin:       sumBin,
 		log:          z.Sugar(),
 	}
 }
@@ -62,7 +61,7 @@ func (u UUIDCache) Warmup(macToIps map[string]string) {
 
 func (u UUIDCache) warmupWorker(wg *sync.WaitGroup, mac, ip string, ch chan entry) {
 	defer wg.Done()
-	uuid, err := u.loadUUID(ip, u.ipmiUser, u.ipmiPassword, u.sumBin)
+	uuid, err := u.loadUUID(ip, u.ipmiPort, u.ipmiUser, u.ipmiPassword)
 	if err != nil {
 		u.log.Errorw("warmupWorker", "error during loadUUID", err)
 		return
@@ -78,7 +77,7 @@ func (u UUIDCache) Get(mac, ip string) (*string, error) {
 	if uuid, ok := u.macToUUID[mac]; ok {
 		return &uuid, nil
 	}
-	uuid, err := u.loadUUID(ip, u.ipmiUser, u.ipmiPassword, u.sumBin)
+	uuid, err := u.loadUUID(ip, u.ipmiPort, u.ipmiUser, u.ipmiPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -90,26 +89,18 @@ func parseUUIDLine(l string) string {
 	return strings.ToLower(uuidRegexCompiled.FindString(l))
 }
 
-func (u UUIDCache) loadUUID(ip, user, password, sum string) (string, error) {
-	args := []string{"--no_banner", "--no_progress", "--journal_level", "0", "-i", ip, "-u", user, "-p", password, "-c", "GetDmiInfo"}
-	cmd := exec.Command(sum, args...)
-	out, err := cmd.StdoutPipe()
+func (u UUIDCache) loadUUID(ip string, port int, user, password string) (string, error) {
+	ob, err := detect.ConnectOutBand(ip, port, user, password)
 	if err != nil {
-		return "", fmt.Errorf("could not initiate sum command to get dmi data from ip:%s, err: %v", ip, err)
+		return "", fmt.Errorf("could not open out-band connection to ip:%s, port:%d, user: %s, err: %v", ip, port, user, err)
 	}
-	err = cmd.Start()
+
+	info, err := ob.DmiInfo()
 	if err != nil {
-		return "", fmt.Errorf("could not start sum command to get dmi data from ip:%s, err: %v", ip, err)
+		return "", fmt.Errorf("failed to get dmi data from ip:%s, err: %v", ip, err)
 	}
-	go func() {
-		err = cmd.Wait()
-		if err != nil {
-			u.log.Errorw("loadUUID", "ip", ip, "wait error", err)
-		}
-	}()
-	s := bufio.NewScanner(out)
-	for s.Scan() {
-		l := s.Text()
+
+	for _, l := range info {
 		if strings.HasPrefix(l, "UUID") {
 			return parseUUIDLine(l), nil
 		}
