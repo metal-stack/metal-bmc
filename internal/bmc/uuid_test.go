@@ -1,4 +1,4 @@
-package ipmi
+package bmc
 
 import (
 	"testing"

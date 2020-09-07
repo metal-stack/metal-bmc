@@ -1,4 +1,4 @@
-module github.com/metal-stack/ipmi-catcher
+module github.com/metal-stack/bmc-catcher
 
 go 1.14
 

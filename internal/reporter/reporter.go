@@ -1,9 +1,9 @@
 package reporter
 
 import (
-	"github.com/metal-stack/ipmi-catcher/domain"
-	"github.com/metal-stack/ipmi-catcher/internal/ipmi"
-	"github.com/metal-stack/ipmi-catcher/internal/leases"
+	"github.com/metal-stack/bmc-catcher/domain"
+	"github.com/metal-stack/bmc-catcher/internal/bmc"
+	"github.com/metal-stack/bmc-catcher/internal/leases"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/metal-go/api/models"
 	"go.uber.org/zap"
@@ -13,10 +13,10 @@ type Reporter struct {
 	cfg       *domain.Config
 	log       *zap.SugaredLogger
 	driver    *metalgo.Driver
-	uuidCache *ipmi.UUIDCache
+	uuidCache *bmc.UUIDCache
 }
 
-func NewReporter(cfg *domain.Config, uuidCache *ipmi.UUIDCache, log *zap.SugaredLogger) (*Reporter, error) {
+func NewReporter(cfg *domain.Config, uuidCache *bmc.UUIDCache, log *zap.SugaredLogger) (*Reporter, error) {
 	driver, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey)
 	if err != nil {
 		return nil, err

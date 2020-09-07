@@ -6,7 +6,7 @@ FROM debian:10
 RUN apt update \
  && apt install --yes --no-install-recommends \
     ca-certificates
-COPY --from=builder /work/bin/ipmi-catcher /
+COPY --from=builder /work/bin/bmc-catcher /
 COPY --from=sum /usr/bin/sum /sum
 
-CMD ["/ipmi-catcher"]
+CMD ["/bmc-catcher"]

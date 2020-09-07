@@ -6,10 +6,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/metal-stack/ipmi-catcher/domain"
-	"github.com/metal-stack/ipmi-catcher/internal/ipmi"
-	"github.com/metal-stack/ipmi-catcher/internal/leases"
-	"github.com/metal-stack/ipmi-catcher/internal/reporter"
+	"github.com/metal-stack/bmc-catcher/domain"
+	"github.com/metal-stack/bmc-catcher/internal/bmc"
+	"github.com/metal-stack/bmc-catcher/internal/leases"
+	"github.com/metal-stack/bmc-catcher/internal/reporter"
 	"github.com/metal-stack/v"
 
 	"github.com/kelseyhightower/envconfig"
@@ -22,7 +22,7 @@ func main() {
 	log := logger.Sugar()
 	log.Infow("running app version", "version", v.V.String())
 	var cfg domain.Config
-	if err := envconfig.Process("IPMI_CATCHER", &cfg); err != nil {
+	if err := envconfig.Process("BMC_CATCHER", &cfg); err != nil {
 		log.Fatalw("bad configuration", "error", err)
 	}
 
@@ -38,7 +38,7 @@ func main() {
 	for m, l := range leasesByMac {
 		macToIps[m] = l.Ip
 	}
-	uuidCache := ipmi.NewUUIDCache(cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
+	uuidCache := bmc.NewUUIDCache(cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
 	uuidCache.Warmup(macToIps)
 
 	r, err := reporter.NewReporter(&cfg, &uuidCache, log)

@@ -2,17 +2,17 @@
 version: '3.7'
 
 services:
-  ipmi-catcher:
+  bmc-catcher:
     build:
       context: .
-    image: metalstack/ipmi-catcher:latest
+    image: metalstack/bmc-catcher:latest
     network_mode: host
     volumes:
       - ${PWD}/dhcpd.leases:/dhcpd.leases
     environment:
-      IPMI_CATCHER_LEASE_FILE: /dhcpd.leases
-      IPMI_CATCHER_PARTITION_ID: partition
-      IPMI_CATCHER_METAL_API_URL: http://localhost:8080
-      IPMI_CATCHER_METAL_API_HMAC_KEY: test
-      IPMI_CATCHER_IGNORE_MACS: "aa:aa:aa:aa:aa:aa"
+      BMC_CATCHER_LEASE_FILE: /dhcpd.leases
+      BMC_CATCHER_PARTITION_ID: partition
+      BMC_CATCHER_METAL_API_URL: http://localhost:8080
+      BMC_CATCHER_METAL_API_HMAC_KEY: test
+      BMC_CATCHER_IGNORE_MACS: "aa:aa:aa:aa:aa:aa"
 
