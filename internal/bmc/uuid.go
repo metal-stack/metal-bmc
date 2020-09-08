@@ -1,22 +1,11 @@
 package bmc
 
 import (
-	"fmt"
-	"github.com/metal-stack/go-hal/detect"
+	"github.com/metal-stack/go-hal/connect"
 	"github.com/pkg/errors"
-	"regexp"
-	"strings"
 	"sync"
 
 	"go.uber.org/zap"
-)
-
-const (
-	uuidRegex = `([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})`
-)
-
-var (
-	uuidRegexCompiled = regexp.MustCompile(uuidRegex)
 )
 
 type UUIDCache struct {
@@ -86,25 +75,16 @@ func (u UUIDCache) Get(mac, ip string) (*string, error) {
 	return &uuid, nil
 }
 
-func parseUUIDLine(l string) string {
-	return strings.ToLower(uuidRegexCompiled.FindString(l))
-}
-
 func (u UUIDCache) loadUUID(ip string, port int, user, password string) (string, error) {
-	ob, err := detect.ConnectOutBand(ip, port, user, password)
+	ob, err := connect.OutBand(ip, port, user, password)
 	if err != nil {
 		return "", errors.Wrapf(err, "could not open out-band connection to ip:%s, port:%d, user: %s", ip, port, user)
 	}
 
-	info, err := ob.DmiInfo()
+	uuid, err := ob.UUID()
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to get dmi data from ip:%s", ip)
+		return "", errors.Wrapf(err, "failed to load UUID from ip:%s", ip)
 	}
 
-	for _, l := range info {
-		if strings.HasPrefix(l, "UUID") {
-			return parseUUIDLine(l), nil
-		}
-	}
-	return "", fmt.Errorf("could not find UUID in dmi data for ip:%s", ip)
+	return string(uuid[:]), nil
 }
