@@ -78,7 +78,7 @@ func (u UUIDCache) Get(mac, ip string) (*string, error) {
 func (u UUIDCache) loadUUID(ip string, port int, user, password string) (string, error) {
 	ob, err := connect.OutBand(ip, port, user, password)
 	if err != nil {
-		return "", errors.Wrapf(err, "could not open out-band connection to ip:%s, port:%d, user: %s", ip, port, user)
+		return "", errors.Wrapf(err, "could not open out-band connection to ip:%s, port:%d, user: %s, error: %v", ip, port, user, err)
 	}
 
 	uuid, err := ob.UUID()

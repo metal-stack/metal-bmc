@@ -41,7 +41,7 @@ func main() {
 	uuidCache := bmc.NewUUIDCache(cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
 	uuidCache.Warmup(macToIps)
 
-	r, err := reporter.NewReporter(&cfg, &uuidCache, log)
+	r, err := reporter.NewReporter(&cfg, &uuidCache, log, cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
 	if err != nil {
 		log.Fatalw("could not start reporter", "error", err)
 	}
