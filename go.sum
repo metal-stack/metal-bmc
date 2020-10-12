@@ -368,8 +368,8 @@ github.com/metal-stack/go-hal v0.1.12-0.20201001083047-90e1043cb849 h1:whurWZbk9
 github.com/metal-stack/go-hal v0.1.12-0.20201001083047-90e1043cb849/go.mod h1:31M1p1NgjVHJBsySD1xzblCefur8h6K7XmotQ57p4po=
 github.com/metal-stack/masterdata-api v0.7.3 h1:w2+UlvqQuJGcVlaKUjdWp6sA01ufOY+0i20c1M90vno=
 github.com/metal-stack/masterdata-api v0.7.3/go.mod h1:AT5m6KOkP6iyqwbDgGa1aQVdSn9bU7PkifjAmaNDLac=
-github.com/metal-stack/metal-go v0.9.3-0.20201001090502-912ad545589f h1:QzlaNRKS07EXGfehKlnY6iGV8dvyBkkmVe6svM4RXkQ=
-github.com/metal-stack/metal-go v0.9.3-0.20201001090502-912ad545589f/go.mod h1:5emMVOjVD2tj6OxCBUYB8Xo1ruBnoP6idwypVV1pzec=
+github.com/metal-stack/metal-go v0.9.3-0.20201012065727-c724c2699a32 h1:O5OGc4pEnA3OKiWBzgjA40CLaiv/TOLElB4Dw5cMGyI=
+github.com/metal-stack/metal-go v0.9.3-0.20201012065727-c724c2699a32/go.mod h1:5emMVOjVD2tj6OxCBUYB8Xo1ruBnoP6idwypVV1pzec=
 github.com/metal-stack/metal-lib v0.5.0/go.mod h1:Vxr1OwM8fef1gtIv9fUiVU4Gq5mkd4ElHMpTjfuuSFQ=
 github.com/metal-stack/security v0.3.0 h1:YJL0qlsXlvA9O3iIWuk5YqF02IX9f6I60n93FkQpV4k=
 github.com/metal-stack/security v0.3.0/go.mod h1:xa0eka4HttrfhDTJPzcSDBGgaFyNBGXhz0B5YGqtKuU=
