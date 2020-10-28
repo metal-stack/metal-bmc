@@ -63,7 +63,7 @@ outer:
 			r.log.Errorw("could not determine uuid of device", "mac", mac, "ip", v.Ip, "err", err)
 		}
 
-		bmc, err := ob.BMC()
+		bmc, err := ob.BMCConnection().BMC()
 		if err != nil {
 			r.log.Errorw("could not determine uuid of device", "mac", mac, "ip", v.Ip, "err", err)
 		}

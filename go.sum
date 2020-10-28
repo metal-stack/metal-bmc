@@ -364,12 +364,12 @@ github.com/mattn/go-isatty v0.0.12 h1:wuysRhFDzyxgEmMf5xjvJ2M9dZoWAXNNr5LSBS7uHX
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
 github.com/mattn/go-sqlite3 v1.9.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
-github.com/metal-stack/go-hal v0.1.12-0.20201001083047-90e1043cb849 h1:whurWZbk9fTchy/kZHKJBkK6HwAnfpa6trygGsr0E7Y=
-github.com/metal-stack/go-hal v0.1.12-0.20201001083047-90e1043cb849/go.mod h1:31M1p1NgjVHJBsySD1xzblCefur8h6K7XmotQ57p4po=
+github.com/metal-stack/go-hal v0.2.1 h1:xLfOlfv8p4VR9U5xHRLhtYbzzO27hn86Q86J5dT0wJg=
+github.com/metal-stack/go-hal v0.2.1/go.mod h1:31M1p1NgjVHJBsySD1xzblCefur8h6K7XmotQ57p4po=
 github.com/metal-stack/masterdata-api v0.7.3 h1:w2+UlvqQuJGcVlaKUjdWp6sA01ufOY+0i20c1M90vno=
 github.com/metal-stack/masterdata-api v0.7.3/go.mod h1:AT5m6KOkP6iyqwbDgGa1aQVdSn9bU7PkifjAmaNDLac=
-github.com/metal-stack/metal-go v0.9.3-0.20201012065727-c724c2699a32 h1:O5OGc4pEnA3OKiWBzgjA40CLaiv/TOLElB4Dw5cMGyI=
-github.com/metal-stack/metal-go v0.9.3-0.20201012065727-c724c2699a32/go.mod h1:5emMVOjVD2tj6OxCBUYB8Xo1ruBnoP6idwypVV1pzec=
+github.com/metal-stack/metal-go v0.9.3-0.20201028091601-1ac67a21e174 h1:iHv3xchK9NuzBXbav7rEP28hWhR6fTeI7khHTUbb3zo=
+github.com/metal-stack/metal-go v0.9.3-0.20201028091601-1ac67a21e174/go.mod h1:5emMVOjVD2tj6OxCBUYB8Xo1ruBnoP6idwypVV1pzec=
 github.com/metal-stack/metal-lib v0.5.0/go.mod h1:Vxr1OwM8fef1gtIv9fUiVU4Gq5mkd4ElHMpTjfuuSFQ=
 github.com/metal-stack/security v0.3.0 h1:YJL0qlsXlvA9O3iIWuk5YqF02IX9f6I60n93FkQpV4k=
 github.com/metal-stack/security v0.3.0/go.mod h1:xa0eka4HttrfhDTJPzcSDBGgaFyNBGXhz0B5YGqtKuU=
