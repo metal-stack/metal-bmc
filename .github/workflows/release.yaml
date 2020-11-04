@@ -11,11 +11,12 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - uses: olegtarasov/get-tag@v2
-      id: tagName
+    - name: Set tag
+      run: |
+        echo "GITHUB_TAG_NAME=${GITHUB_HEAD_REF##*/}" >> $GITHUB_ENV
     - name: Docker Image
       uses: metal-stack/action-docker-make@master
       with:
-        username: metalstackci
+        username: ${{ secrets.DOCKER_HUB_USER }}
         password: ${{ secrets.DOCKER_HUB_TOKEN }}
         args: --no-lint -b release
