@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/metal-stack/go-hal v0.2.3-0.20201104140102-f94acdc5e996
+	github.com/metal-stack/go-hal v0.2.3-0.20201104140316-f37c838604ff
 	github.com/metal-stack/metal-go v0.10.0
 	github.com/metal-stack/v v1.0.2
 	github.com/pkg/errors v0.9.1
