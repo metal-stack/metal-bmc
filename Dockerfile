@@ -4,7 +4,8 @@ FROM debian:10
 
 RUN apt update \
  && apt install --yes --no-install-recommends \
-    ca-certificates
+    ca-certificates \
+    ipmitool
 COPY --from=builder /work/bin/bmc-catcher /
 
 CMD ["/bmc-catcher"]
