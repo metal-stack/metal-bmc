@@ -61,24 +61,24 @@ outer:
 		ob, err := connect.OutBand(v.Ip, r.ipmiPort, r.ipmiUser, r.ipmiPassword)
 		if err != nil {
 			r.log.Errorw("could not determine uuid of device", "mac", mac, "ip", v.Ip, "err", err)
+			continue
 		}
 
-		bmc, err := ob.BMCConnection().BMC()
+		bmcDetails, err := ob.BMCConnection().BMC()
 		if err != nil {
 			r.log.Errorw("could not determine uuid of device", "mac", mac, "ip", v.Ip, "err", err)
+			continue
 		}
 
-		if bmc != nil {
-			f[*uuid] = models.V1MachineFru{
-				BoardMfg:            bmc.BoardMfg,
-				BoardMfgSerial:      bmc.BoardMfgSerial,
-				BoardPartNumber:     bmc.BoardPartNumber,
-				ChassisPartNumber:   bmc.ChassisPartNumber,
-				ChassisPartSerial:   bmc.ChassisPartSerial,
-				ProductManufacturer: bmc.ProductManufacturer,
-				ProductPartNumber:   bmc.ProductPartNumber,
-				ProductSerial:       bmc.ProductSerial,
-			}
+		f[*uuid] = models.V1MachineFru{
+			BoardMfg:            bmcDetails.BoardMfg,
+			BoardMfgSerial:      bmcDetails.BoardMfgSerial,
+			BoardPartNumber:     bmcDetails.BoardPartNumber,
+			ChassisPartNumber:   bmcDetails.ChassisPartNumber,
+			ChassisPartSerial:   bmcDetails.ChassisPartSerial,
+			ProductManufacturer: bmcDetails.ProductManufacturer,
+			ProductPartNumber:   bmcDetails.ProductPartNumber,
+			ProductSerial:       bmcDetails.ProductSerial,
 		}
 	}
 
