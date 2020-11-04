@@ -1,7 +1,7 @@
-name: Build image from master
+name: Build image from pull request
 
 on:
-  push:
+  pull_request:
     branches:
       - master
 
@@ -11,13 +11,12 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+    - name: Set tag
+      run: |
+        echo "GITHUB_TAG_NAME=${GITHUB_HEAD_REF##*/}" >> $GITHUB_ENV
     - name: Docker Image
       uses: metal-stack/action-docker-make@master
       with:
         username: ${{ secrets.DOCKER_HUB_USER }}
         password: ${{ secrets.DOCKER_HUB_TOKEN }}
-        args: --no-lint -b master
-    - uses: release-drafter/release-drafter@v5
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+        args: --no-lint -b release
