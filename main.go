@@ -6,10 +6,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/metal-stack/ipmi-catcher/domain"
-	"github.com/metal-stack/ipmi-catcher/internal/ipmi"
-	"github.com/metal-stack/ipmi-catcher/internal/leases"
-	"github.com/metal-stack/ipmi-catcher/internal/reporter"
+	"github.com/metal-stack/bmc-catcher/domain"
+	"github.com/metal-stack/bmc-catcher/internal/bmc"
+	"github.com/metal-stack/bmc-catcher/internal/leases"
+	"github.com/metal-stack/bmc-catcher/internal/reporter"
 	"github.com/metal-stack/v"
 
 	"github.com/kelseyhightower/envconfig"
@@ -20,16 +20,16 @@ import (
 func main() {
 	logger, _ := zap.NewProduction()
 	log := logger.Sugar()
-	log.Infof("running app version: %s", v.V.String())
+	log.Infow("running app version", "version", v.V.String())
 	var cfg domain.Config
-	if err := envconfig.Process("IPMI_CATCHER", &cfg); err != nil {
-		log.Fatalf("bad configuration: %v", err)
+	if err := envconfig.Process("BMC_CATCHER", &cfg); err != nil {
+		log.Fatalw("bad configuration", "error", err)
 	}
 
 	log.Infow("loaded configuration", "config", cfg)
 	l, err := leases.ReadLeases(cfg.LeaseFile)
 	if err != nil {
-		log.Fatalf("could not parse leases file, err: %v", err)
+		log.Fatalw("could not parse leases file", "error", err)
 	}
 
 	log.Info("warming up cache")
@@ -38,22 +38,22 @@ func main() {
 	for m, l := range leasesByMac {
 		macToIps[m] = l.Ip
 	}
-	uuidCache := ipmi.NewUUIDCache(cfg.IpmiUser, cfg.IpmiPassword, cfg.SumBin)
+	uuidCache := bmc.NewUUIDCache(cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
 	uuidCache.Warmup(macToIps)
 
-	r, err := reporter.NewReporter(&cfg, &uuidCache, log)
+	r, err := reporter.NewReporter(&cfg, &uuidCache, log, cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
 	if err != nil {
-		log.Fatalf("could not start reporter, err: %v", err)
+		log.Fatalw("could not start reporter", "error", err)
 	}
 	err = r.Report(l)
 	if err != nil {
-		log.Fatalf("could not send initial report of ipmi addresses, err: %v", err)
+		log.Fatalw("could not send initial report of ipmi addresses", "error", err)
 	}
 
 	periodic := time.NewTicker(cfg.ReportInterval)
 	dhcpEvents, err := snoopDhcpEvents()
 	if err != nil {
-		log.Fatalf("could not initialize dhcp snooper: %v", err)
+		log.Fatalw("could not initialize dhcp snooper", "error", err)
 	}
 	debounced := time.NewTimer(cfg.DebounceInterval)
 	debounced.Stop()
@@ -70,11 +70,11 @@ outer:
 		case <-debounced.C:
 			l, err := leases.ReadLeases(cfg.LeaseFile)
 			if err != nil {
-				log.Fatalf("could not parse leases file, err: %v", err)
+				log.Fatalw("could not parse leases file", "error", err)
 			}
 			err = r.Report(l)
 			if err != nil {
-				log.Warnf("could not report ipmi addresses, err: %v", err)
+				log.Warnw("could not report ipmi addresses", "error", err)
 			}
 		case <-signals:
 			break outer
