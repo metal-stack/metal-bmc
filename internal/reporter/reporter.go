@@ -21,7 +21,7 @@ type Reporter struct {
 }
 
 func NewReporter(cfg *domain.Config, uuidCache *bmc.UUIDCache, log *zap.SugaredLogger, ipmiPort int, ipmiUser, ipmiPassword string) (*Reporter, error) {
-	driver, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey)
+	driver, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey, metalgo.AuthType("Metal-Edit"))
 	if err != nil {
 		return nil, err
 	}
