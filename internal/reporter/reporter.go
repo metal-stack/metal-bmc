@@ -57,16 +57,15 @@ outer:
 		}
 		l[*uuid] = v.Ip
 
-		// load FRU information
 		ob, err := connect.OutBand(v.Ip, r.ipmiPort, r.ipmiUser, r.ipmiPassword)
 		if err != nil {
-			r.log.Errorw("could not determine uuid of device", "mac", mac, "ip", v.Ip, "err", err)
+			r.log.Errorw("could not establish outband connection to device bmc", "mac", mac, "ip", v.Ip, "err", err)
 			continue
 		}
 
 		bmcDetails, err := ob.BMCConnection().BMC()
 		if err != nil {
-			r.log.Errorw("could not determine uuid of device", "mac", mac, "ip", v.Ip, "err", err)
+			r.log.Errorw("could not retrieve bmc details of device", "mac", mac, "ip", v.Ip, "err", err)
 			continue
 		}
 

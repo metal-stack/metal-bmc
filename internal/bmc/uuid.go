@@ -1,9 +1,10 @@
 package bmc
 
 import (
+	"sync"
+
 	"github.com/metal-stack/go-hal/connect"
 	"github.com/pkg/errors"
-	"sync"
 
 	"go.uber.org/zap"
 )
@@ -86,5 +87,5 @@ func (u UUIDCache) loadUUID(ip string, port int, user, password string) (string,
 		return "", errors.Wrapf(err, "failed to load UUID from ip:%s", ip)
 	}
 
-	return string(uuid[:]), nil
+	return uuid.String(), nil
 }
