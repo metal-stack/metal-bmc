@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// Reporter reports information about bmc, bios and dhcp ip of bmc to metal-api
 type Reporter struct {
 	cfg          *domain.Config
 	log          *zap.SugaredLogger
@@ -20,6 +21,7 @@ type Reporter struct {
 	ipmiPassword string
 }
 
+// NewReporter will create a reporter for MachineIpmiReports
 func NewReporter(cfg *domain.Config, uuidCache *bmc.UUIDCache, log *zap.SugaredLogger, ipmiPort int, ipmiUser, ipmiPassword string) (*Reporter, error) {
 	driver, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey, metalgo.AuthType("Metal-Edit"))
 	if err != nil {
@@ -36,6 +38,7 @@ func NewReporter(cfg *domain.Config, uuidCache *bmc.UUIDCache, log *zap.SugaredL
 	}, nil
 }
 
+// Report will send all gathered information about machines to the metal-api
 func (r Reporter) Report(ls leases.Leases) error {
 	active := ls.FilterActive()
 	byMac := active.LatestByMac()
@@ -51,15 +54,16 @@ outer:
 			}
 		}
 
-		uuid, err := r.uuidCache.Get(mac, v.Ip)
+		ip := v.Ip
+		uuid, err := r.uuidCache.Get(mac, ip)
 		if err != nil {
-			r.log.Errorw("could not determine uuid of device", "mac", mac, "ip", v.Ip, "err", err)
+			r.log.Errorw("could not determine uuid of device", "mac", mac, "ip", ip, "err", err)
 			continue
 		}
 
 		ob, err := connect.OutBand(v.Ip, r.ipmiPort, r.ipmiUser, r.ipmiPassword)
 		if err != nil {
-			r.log.Errorw("could not establish outband connection to device bmc", "mac", mac, "ip", v.Ip, "err", err)
+			r.log.Errorw("could not establish outband connection to device bmc", "mac", mac, "ip", ip, "err", err)
 			continue
 		}
 
@@ -70,7 +74,7 @@ outer:
 		}
 		bmcDetails, err := ob.BMCConnection().BMC()
 		if err != nil {
-			r.log.Errorw("could not retrieve bmc details of device", "mac", mac, "ip", v.Ip, "err", err)
+			r.log.Errorw("could not retrieve bmc details of device", "mac", mac, "ip", ip, "err", err)
 			continue
 		}
 
@@ -85,7 +89,7 @@ outer:
 			ProductSerial:       bmcDetails.ProductSerial,
 		}
 		report := models.V1MachineIPMIReport{
-			BMCIP:       &v.Ip,
+			BMCIP:       &ip,
 			BMCVersion:  &bmcDetails.FirmwareRevision,
 			BIOSVersion: &biosversion,
 			FRU:         fru,
