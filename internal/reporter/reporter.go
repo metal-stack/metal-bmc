@@ -41,8 +41,8 @@ func (r Reporter) Report(ls leases.Leases) error {
 	byMac := active.LatestByMac()
 	r.log.Infow("reporting leases to metal-api", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
 	partitionID := r.cfg.PartitionID
-	l := make(map[string]string)
-	f := make(map[string]models.V1MachineFru)
+	reports := make(map[string]models.V1MachineIPMIReport)
+
 outer:
 	for mac, v := range byMac {
 		for _, m := range r.cfg.IgnoreMacs {
@@ -50,12 +50,12 @@ outer:
 				continue outer
 			}
 		}
+
 		uuid, err := r.uuidCache.Get(mac, v.Ip)
 		if err != nil {
 			r.log.Errorw("could not determine uuid of device", "mac", mac, "ip", v.Ip, "err", err)
 			continue
 		}
-		l[*uuid] = v.Ip
 
 		ob, err := connect.OutBand(v.Ip, r.ipmiPort, r.ipmiUser, r.ipmiPassword)
 		if err != nil {
@@ -63,13 +63,18 @@ outer:
 			continue
 		}
 
+		biosversion := ""
+		board := ob.Board()
+		if board != nil {
+			biosversion = board.BiosVersion
+		}
 		bmcDetails, err := ob.BMCConnection().BMC()
 		if err != nil {
 			r.log.Errorw("could not retrieve bmc details of device", "mac", mac, "ip", v.Ip, "err", err)
 			continue
 		}
 
-		f[*uuid] = models.V1MachineFru{
+		fru := &models.V1MachineFru{
 			BoardMfg:            bmcDetails.BoardMfg,
 			BoardMfgSerial:      bmcDetails.BoardMfgSerial,
 			BoardPartNumber:     bmcDetails.BoardPartNumber,
@@ -79,25 +84,31 @@ outer:
 			ProductPartNumber:   bmcDetails.ProductPartNumber,
 			ProductSerial:       bmcDetails.ProductSerial,
 		}
+		report := models.V1MachineIPMIReport{
+			BMCIP:       &v.Ip,
+			BMCVersion:  &bmcDetails.FirmwareRevision,
+			BIOSVersion: &biosversion,
+			FRU:         fru,
+		}
+		reports[*uuid] = report
 	}
 
-	mir := metalgo.MachineIPMIReport{
-		Report: &models.V1MachineIPMIReport{
-			Partitionid: &partitionID,
-			Leases:      l,
-			Frus:        f,
+	mir := metalgo.MachineIPMIReports{
+		Reports: &models.V1MachineIPMIReports{
+			Partitionid: partitionID,
+			Reports:     reports,
 		},
 	}
 	ok, err := r.driver.MachineIPMIReport(mir)
 	if err != nil {
 		return err
 	}
-	r.log.Infof("updated ipmi ips of %d machines", len(ok.Response.Updated))
-	for uuid, ip := range ok.Response.Updated {
-		r.log.Infow("ipmi ip address was updated for machine", "id", uuid, "ip", ip)
+	r.log.Infof("updated ipmi information of %d machines", len(ok.Response.Updated))
+	for _, uuid := range ok.Response.Updated {
+		r.log.Infow("ipmi information was updated for machine", "id", uuid)
 	}
-	for uuid, ip := range ok.Response.Created {
-		r.log.Infow("ipmi ip address was set and machine was created", "id", uuid, "ip", ip)
+	for _, uuid := range ok.Response.Created {
+		r.log.Infow("ipmi information was set and machine was created", "id", uuid)
 	}
 	return nil
 }
