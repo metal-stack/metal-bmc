@@ -1,9 +1,8 @@
 FROM metalstack/builder:latest as builder
 
-FROM debian:10
+FROM alpine:3.12
 
-RUN apt update \
- && apt install --yes --no-install-recommends \
+RUN apk add \
     ca-certificates \
     ipmitool
 COPY --from=builder /work/bin/bmc-catcher /
