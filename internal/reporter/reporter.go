@@ -103,12 +103,12 @@ outer:
 	if err != nil {
 		return err
 	}
-	r.log.Infof("updated ipmi ips of %d machines", len(ok.Response.Updated))
-	for uuid, ip := range ok.Response.Updated {
-		r.log.Infow("ipmi ip address was updated for machine", "id", uuid, "ip", ip)
+	r.log.Infof("updated ipmi information of %d machines", len(ok.Response.Updated))
+	for _, uuid := range ok.Response.Updated {
+		r.log.Infow("ipmi information was updated for machine", "id", uuid)
 	}
-	for uuid, ip := range ok.Response.Created {
-		r.log.Infow("ipmi ip address was set and machine was created", "id", uuid, "ip", ip)
+	for _, uuid := range ok.Response.Created {
+		r.log.Infow("ipmi information was set and machine was created", "id", uuid)
 	}
 	return nil
 }
