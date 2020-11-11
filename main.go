@@ -72,44 +72,7 @@ outer:
 				mac := mac
 				l := l
 				go func() {
-					bmcVersion := ""
-					biosVersion := ""
-					var fru *models.V1MachineFru
-
-					ob, err := connect.OutBand(l.Ip, cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword, halzap.New(r.Log))
-					if err != nil {
-						log.Errorw("could not establish outband connection to device bmc", "mac", mac, "ip", l.Ip, "err", err)
-					} else {
-						bmcDetails, err := ob.BMCConnection().BMC()
-						if err != nil {
-							log.Errorw("could not retrieve bmc details of device", "mac", mac, "ip", l.Ip, "err", err)
-						} else {
-							bmcVersion = bmcDetails.FirmwareRevision
-							fru = &models.V1MachineFru{
-								BoardMfg:            bmcDetails.BoardMfg,
-								BoardMfgSerial:      bmcDetails.BoardMfgSerial,
-								BoardPartNumber:     bmcDetails.BoardPartNumber,
-								ChassisPartNumber:   bmcDetails.ChassisPartNumber,
-								ChassisPartSerial:   bmcDetails.ChassisPartSerial,
-								ProductManufacturer: bmcDetails.ProductManufacturer,
-								ProductPartNumber:   bmcDetails.ProductPartNumber,
-								ProductSerial:       bmcDetails.ProductSerial,
-							}
-						}
-
-						board := ob.Board()
-						if board != nil {
-							biosVersion = board.BiosVersion
-						}
-					}
-
-					item := &leases.ReportItem{
-						Lease:       l,
-						FRU:         fru,
-						BmcVersion:  &bmcVersion,
-						BiosVersion: &biosVersion,
-					}
-
+					item := getReportItem(mac, l.Ip, cfg, log)
 					mtx.Lock()
 					items = append(items, item)
 					wg.Done()
@@ -126,6 +89,45 @@ outer:
 		case <-signals:
 			break outer
 		}
+	}
+}
+
+func getReportItem(mac, ip string, cfg domain.Config, log *zap.SugaredLogger) *leases.ReportItem {
+	bmcVersion := ""
+	biosVersion := ""
+	var fru *models.V1MachineFru
+
+	ob, err := connect.OutBand(ip, cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword, halzap.New(log))
+	if err != nil {
+		log.Errorw("could not establish outband connection to device bmc", "mac", mac, "ip", ip, "err", err)
+	} else {
+		bmcDetails, err := ob.BMCConnection().BMC()
+		if err != nil {
+			log.Errorw("could not retrieve bmc details of device", "mac", mac, "ip", ip, "err", err)
+		} else {
+			bmcVersion = bmcDetails.FirmwareRevision
+			fru = &models.V1MachineFru{
+				BoardMfg:            bmcDetails.BoardMfg,
+				BoardMfgSerial:      bmcDetails.BoardMfgSerial,
+				BoardPartNumber:     bmcDetails.BoardPartNumber,
+				ChassisPartNumber:   bmcDetails.ChassisPartNumber,
+				ChassisPartSerial:   bmcDetails.ChassisPartSerial,
+				ProductManufacturer: bmcDetails.ProductManufacturer,
+				ProductPartNumber:   bmcDetails.ProductPartNumber,
+				ProductSerial:       bmcDetails.ProductSerial,
+			}
+		}
+
+		board := ob.Board()
+		if board != nil {
+			biosVersion = board.BiosVersion
+		}
+	}
+
+	return &leases.ReportItem{
+		FRU:         fru,
+		BmcVersion:  &bmcVersion,
+		BiosVersion: &biosVersion,
 	}
 }
 
