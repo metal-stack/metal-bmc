@@ -419,8 +419,8 @@ github.com/mattn/go-isatty v0.0.12 h1:wuysRhFDzyxgEmMf5xjvJ2M9dZoWAXNNr5LSBS7uHX
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
 github.com/mattn/go-sqlite3 v1.9.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
-github.com/metal-stack/go-hal v0.2.7 h1:VZY0LMVcRa0qee78uMEdqEmai1lF0atYuEQCL9zHrmk=
-github.com/metal-stack/go-hal v0.2.7/go.mod h1:RAZhVV24xlqHRDd6eWfcdlZ5o26PiT7OKUTfWA3bQQE=
+github.com/metal-stack/go-hal v0.2.8 h1:oyVm1kMWIaolPRRy7XJm1ndSj/S/Cnlnd+Nwzsn18Mg=
+github.com/metal-stack/go-hal v0.2.8/go.mod h1:V8mMM5oreMJP8aydfPpl7g6XnYAN+iVlngh1eitNJsU=
 github.com/metal-stack/masterdata-api v0.7.3 h1:w2+UlvqQuJGcVlaKUjdWp6sA01ufOY+0i20c1M90vno=
 github.com/metal-stack/masterdata-api v0.7.3/go.mod h1:AT5m6KOkP6iyqwbDgGa1aQVdSn9bU7PkifjAmaNDLac=
 github.com/metal-stack/metal-go v0.10.3 h1:rKwmzZvkEu2zgCD1U4zBFqttii23eqn/ZZPeSrlmr0k=
@@ -542,8 +542,8 @@ github.com/spf13/viper v1.3.2/go.mod h1:ZiWeW+zYFKm7srdB9IoDzzZXaJaI5eL9QjNiN/DM
 github.com/spf13/viper v1.4.0/go.mod h1:PTJ7Z/lr49W6bUbkmS1V3by4uWynFiR9p7+dSq/yZzE=
 github.com/spf13/viper v1.6.2/go.mod h1:t3iDnF5Jlj76alVNuyFBk5oUMCvsrkbvZK0WQdfDi5k=
 github.com/spf13/viper v1.7.0/go.mod h1:8WkrPz2fc9jxqZNCJI/76HCieCp4Q8HaLFoCha5qpdg=
-github.com/stmcginnis/gofish v0.5.0 h1:hD8ji0I6G6wFEe59l03Bk1u8izgj4agR0S+Hvnp4wws=
-github.com/stmcginnis/gofish v0.5.0/go.mod h1:t0RUeoOLznx9vExQOeLZUrjU0u3yy0wL4iVMQviUl+k=
+github.com/stmcginnis/gofish v0.6.0 h1:ZTMR0pNO/cBUEvsUOfY0cK0eqRR2Fb1y9B9U7sEwcK8=
+github.com/stmcginnis/gofish v0.6.0/go.mod h1:t0RUeoOLznx9vExQOeLZUrjU0u3yy0wL4iVMQviUl+k=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.1.1/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.2.0 h1:Hbg2NidpLE8veEBkEZTL3CvlkUIVzuU9jDplZO54c48=
