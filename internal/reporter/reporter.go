@@ -5,6 +5,7 @@ import (
 	"github.com/metal-stack/bmc-catcher/internal/bmc"
 	"github.com/metal-stack/bmc-catcher/internal/leases"
 	"github.com/metal-stack/go-hal/connect"
+	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/metal-go/api/models"
 	"go.uber.org/zap"
@@ -44,7 +45,7 @@ func (r Reporter) Report(ls leases.Leases) error {
 	byMac := active.LatestByMac()
 	r.log.Infow("reporting leases to metal-api", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
 	partitionID := r.cfg.PartitionID
-	reports := make(map[string]models.V1MachineIPMIReport)
+	reports := make(map[string]models.V1MachineIpmiReport)
 
 outer:
 	for mac, v := range byMac {
@@ -61,7 +62,7 @@ outer:
 			continue
 		}
 
-		ob, err := connect.OutBand(v.Ip, r.ipmiPort, r.ipmiUser, r.ipmiPassword)
+		ob, err := connect.OutBand(v.Ip, r.ipmiPort, r.ipmiUser, r.ipmiPassword, halzap.New(r.log))
 		if err != nil {
 			r.log.Errorw("could not establish outband connection to device bmc", "mac", mac, "ip", ip, "err", err)
 			continue
@@ -88,7 +89,7 @@ outer:
 			ProductPartNumber:   bmcDetails.ProductPartNumber,
 			ProductSerial:       bmcDetails.ProductSerial,
 		}
-		report := models.V1MachineIPMIReport{
+		report := models.V1MachineIpmiReport{
 			BMCIP:       &ip,
 			BMCVersion:  &bmcDetails.FirmwareRevision,
 			BIOSVersion: &biosversion,
@@ -98,7 +99,7 @@ outer:
 	}
 
 	mir := metalgo.MachineIPMIReports{
-		Reports: &models.V1MachineIPMIReports{
+		Reports: &models.V1MachineIpmiReports{
 			Partitionid: partitionID,
 			Reports:     reports,
 		},
