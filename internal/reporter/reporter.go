@@ -12,7 +12,7 @@ import (
 // Reporter reports information about bmc, bios and dhcp ip of bmc to metal-api
 type Reporter struct {
 	cfg          *domain.Config
-	log          *zap.SugaredLogger
+	Log          *zap.SugaredLogger
 	driver       *metalgo.Driver
 	uuidCache    *bmc.UUIDCache
 	ipmiPort     int
@@ -28,7 +28,7 @@ func NewReporter(cfg *domain.Config, uuidCache *bmc.UUIDCache, log *zap.SugaredL
 	}
 	return &Reporter{
 		cfg:          cfg,
-		log:          log,
+		Log:          log,
 		driver:       driver,
 		uuidCache:    uuidCache,
 		ipmiPort:     ipmiPort,
@@ -40,7 +40,7 @@ func NewReporter(cfg *domain.Config, uuidCache *bmc.UUIDCache, log *zap.SugaredL
 // Report will send all gathered information about machines to the metal-api
 func (r Reporter) Report(items []*leases.ReportItem) error {
 	partitionID := r.cfg.PartitionID
-	reports := make(map[string]models.V1MachineIPMIReport)
+	reports := make(map[string]models.V1MachineIpmiReport)
 
 outer:
 	for _, item := range items {
@@ -55,11 +55,11 @@ outer:
 		ip := item.Ip
 		uuid, err := r.uuidCache.Get(mac, ip)
 		if err != nil {
-			r.log.Errorw("could not determine uuid of device", "mac", mac, "ip", ip, "err", err)
+			r.Log.Errorw("could not determine uuid of device", "mac", mac, "ip", ip, "err", err)
 			continue
 		}
 
-		report := models.V1MachineIPMIReport{
+		report := models.V1MachineIpmiReport{
 			BMCIP:       &ip,
 			BMCVersion:  item.BmcVersion,
 			BIOSVersion: item.BiosVersion,
@@ -69,7 +69,7 @@ outer:
 	}
 
 	mir := metalgo.MachineIPMIReports{
-		Reports: &models.V1MachineIPMIReports{
+		Reports: &models.V1MachineIpmiReports{
 			Partitionid: partitionID,
 			Reports:     reports,
 		},
@@ -78,12 +78,12 @@ outer:
 	if err != nil {
 		return err
 	}
-	r.log.Infof("updated ipmi information of %d machines", len(ok.Response.Updated))
+	r.Log.Infof("updated ipmi information of %d machines", len(ok.Response.Updated))
 	for _, uuid := range ok.Response.Updated {
-		r.log.Infow("ipmi information was updated for machine", "id", uuid)
+		r.Log.Infow("ipmi information was updated for machine", "id", uuid)
 	}
 	for _, uuid := range ok.Response.Created {
-		r.log.Infow("ipmi information was set and machine was created", "id", uuid)
+		r.Log.Infow("ipmi information was set and machine was created", "id", uuid)
 	}
 	return nil
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/metal-stack/v"
 
 	"github.com/kelseyhightower/envconfig"
+	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
 	"go.uber.org/zap"
 	"go.universe.tf/netboot/dhcp4"
 )
@@ -101,7 +102,7 @@ outer:
 					biosVersion := ""
 					var fru *models.V1MachineFru
 
-					ob, err := connect.OutBand(l.Ip, cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
+					ob, err := connect.OutBand(l.Ip, cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword, halzap.New(r.Log))
 					if err != nil {
 						log.Errorw("could not establish outband connection to device bmc", "mac", mac, "ip", l.Ip, "err", err)
 					} else {
