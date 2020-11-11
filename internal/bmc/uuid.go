@@ -2,6 +2,8 @@ package bmc
 
 import (
 	"github.com/metal-stack/go-hal/connect"
+	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
+
 	"github.com/pkg/errors"
 
 	"go.uber.org/zap"
@@ -25,7 +27,7 @@ func NewUUIDLoader(ipmiPort int, ipmiUser, ipmiPassword string) *UUIDLoader {
 }
 
 func (u *UUIDLoader) LoadFrom(ip string) (string, error) {
-	ob, err := connect.OutBand(ip, u.ipmiPort, u.ipmiUser, u.ipmiPassword)
+	ob, err := connect.OutBand(ip, u.ipmiPort, u.ipmiUser, u.ipmiPassword, halzap.New(u.log))
 	if err != nil {
 		return "", errors.Wrapf(err, "could not open out-band connection to ip:%s, port:%d, user: %s, error: %v", ip, u.ipmiPort, u.ipmiUser, err)
 	}
