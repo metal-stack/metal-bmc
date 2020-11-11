@@ -4,6 +4,8 @@ import (
 	"sync"
 
 	"github.com/metal-stack/go-hal/connect"
+	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
+
 	"github.com/pkg/errors"
 
 	"go.uber.org/zap"
@@ -77,7 +79,7 @@ func (u UUIDCache) Get(mac, ip string) (*string, error) {
 }
 
 func (u UUIDCache) loadUUID(ip string, port int, user, password string) (string, error) {
-	ob, err := connect.OutBand(ip, port, user, password)
+	ob, err := connect.OutBand(ip, port, user, password, halzap.New(u.log))
 	if err != nil {
 		return "", errors.Wrapf(err, "could not open out-band connection to ip:%s, port:%d, user: %s, error: %v", ip, port, user, err)
 	}
