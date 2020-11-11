@@ -11,29 +11,23 @@ import (
 
 // Reporter reports information about bmc, bios and dhcp ip of bmc to metal-api
 type Reporter struct {
-	cfg          *domain.Config
-	Log          *zap.SugaredLogger
-	driver       *metalgo.Driver
-	uuidCache    *bmc.UUIDCache
-	ipmiPort     int
-	ipmiUser     string
-	ipmiPassword string
+	cfg        *domain.Config
+	Log        *zap.SugaredLogger
+	driver     *metalgo.Driver
+	uuidLoader *bmc.UUIDLoader
 }
 
 // NewReporter will create a reporter for MachineIpmiReports
-func NewReporter(cfg *domain.Config, uuidCache *bmc.UUIDCache, log *zap.SugaredLogger, ipmiPort int, ipmiUser, ipmiPassword string) (*Reporter, error) {
+func NewReporter(cfg *domain.Config, log *zap.SugaredLogger, ipmiPort int, ipmiUser, ipmiPassword string) (*Reporter, error) {
 	driver, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey, metalgo.AuthType("Metal-Edit"))
 	if err != nil {
 		return nil, err
 	}
 	return &Reporter{
-		cfg:          cfg,
-		Log:          log,
-		driver:       driver,
-		uuidCache:    uuidCache,
-		ipmiPort:     ipmiPort,
-		ipmiUser:     ipmiUser,
-		ipmiPassword: ipmiPassword,
+		cfg:        cfg,
+		Log:        log,
+		driver:     driver,
+		uuidLoader: bmc.NewUUIDLoader(ipmiPort, ipmiUser, ipmiPassword),
 	}, nil
 }
 
@@ -53,7 +47,7 @@ outer:
 		}
 
 		ip := item.Ip
-		uuid, err := r.uuidCache.Get(mac, ip)
+		uuid, err := r.uuidLoader.LoadFrom(ip)
 		if err != nil {
 			r.Log.Errorw("could not determine uuid of device", "mac", mac, "ip", ip, "err", err)
 			continue
@@ -65,7 +59,7 @@ outer:
 			BIOSVersion: item.BiosVersion,
 			FRU:         item.FRU,
 		}
-		reports[*uuid] = report
+		reports[uuid] = report
 	}
 
 	mir := metalgo.MachineIPMIReports{
