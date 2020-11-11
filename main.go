@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/metal-stack/bmc-catcher/domain"
-	"github.com/metal-stack/bmc-catcher/internal/bmc"
 	"github.com/metal-stack/bmc-catcher/internal/leases"
 	"github.com/metal-stack/bmc-catcher/internal/reporter"
 	"github.com/metal-stack/v"
@@ -30,33 +29,10 @@ func main() {
 	}
 
 	log.Infow("loaded configuration", "config", cfg)
-	ll, err := leases.ReadLeases(cfg.LeaseFile)
-	if err != nil {
-		log.Fatalw("could not parse leases file", "error", err)
-	}
 
-	log.Info("warming up cache")
-	leasesByMac := ll.LatestByMac()
-	macToIps := map[string]string{}
-	for m, l := range leasesByMac {
-		macToIps[m] = l.Ip
-	}
-	uuidCache := bmc.NewUUIDCache(cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
-	uuidCache.Warmup(macToIps)
-
-	r, err := reporter.NewReporter(&cfg, &uuidCache, log, cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
+	r, err := reporter.NewReporter(&cfg, log, cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
 	if err != nil {
 		log.Fatalw("could not start reporter", "error", err)
-	}
-	items := make([]*leases.ReportItem, len(ll))
-	for i, l := range ll {
-		items[i] = &leases.ReportItem{
-			Lease: l,
-		}
-	}
-	err = r.Report(items)
-	if err != nil {
-		log.Fatalw("could not send initial report of ipmi addresses", "error", err)
 	}
 
 	periodic := time.NewTicker(cfg.ReportInterval)
