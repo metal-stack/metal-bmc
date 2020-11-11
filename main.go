@@ -1,8 +1,11 @@
 package main
 
 import (
+	"github.com/metal-stack/go-hal/connect"
+	"github.com/metal-stack/metal-go/api/models"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -27,13 +30,13 @@ func main() {
 	}
 
 	log.Infow("loaded configuration", "config", cfg)
-	l, err := leases.ReadLeases(cfg.LeaseFile)
+	ll, err := leases.ReadLeases(cfg.LeaseFile)
 	if err != nil {
 		log.Fatalw("could not parse leases file", "error", err)
 	}
 
 	log.Info("warming up cache")
-	leasesByMac := l.LatestByMac()
+	leasesByMac := ll.LatestByMac()
 	macToIps := map[string]string{}
 	for m, l := range leasesByMac {
 		macToIps[m] = l.Ip
@@ -45,7 +48,13 @@ func main() {
 	if err != nil {
 		log.Fatalw("could not start reporter", "error", err)
 	}
-	err = r.Report(l)
+	items := make([]*leases.ReportItem, len(ll))
+	for i, l := range ll {
+		items[i] = &leases.ReportItem{
+			Lease: l,
+		}
+	}
+	err = r.Report(items)
 	if err != nil {
 		log.Fatalw("could not send initial report of ipmi addresses", "error", err)
 	}
@@ -68,11 +77,73 @@ outer:
 		case <-dhcpEvents:
 			debounced.Reset(cfg.DebounceInterval)
 		case <-debounced.C:
-			l, err := leases.ReadLeases(cfg.LeaseFile)
+			ls, err := leases.ReadLeases(cfg.LeaseFile)
 			if err != nil {
 				log.Fatalw("could not parse leases file", "error", err)
 			}
-			err = r.Report(l)
+			active := ls.FilterActive()
+			byMac := active.LatestByMac()
+			log.Infow("reporting leases to metal-api", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
+
+			mtx := new(sync.Mutex)
+			var items []*leases.ReportItem
+
+			wg := new(sync.WaitGroup)
+			wg.Add(len(byMac))
+
+			for mac, l := range byMac {
+				mac := mac
+				l := l
+				go func() {
+					defer wg.Done()
+
+					bmcVersion := ""
+					biosVersion := ""
+					var fru *models.V1MachineFru
+
+					ob, err := connect.OutBand(l.Ip, cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
+					if err != nil {
+						log.Errorw("could not establish outband connection to device bmc", "mac", mac, "ip", l.Ip, "err", err)
+					} else {
+						bmcDetails, err := ob.BMCConnection().BMC()
+						if err != nil {
+							log.Errorw("could not retrieve bmc details of device", "mac", mac, "ip", l.Ip, "err", err)
+						} else {
+							bmcVersion = bmcDetails.FirmwareRevision
+							fru = &models.V1MachineFru{
+								BoardMfg:            bmcDetails.BoardMfg,
+								BoardMfgSerial:      bmcDetails.BoardMfgSerial,
+								BoardPartNumber:     bmcDetails.BoardPartNumber,
+								ChassisPartNumber:   bmcDetails.ChassisPartNumber,
+								ChassisPartSerial:   bmcDetails.ChassisPartSerial,
+								ProductManufacturer: bmcDetails.ProductManufacturer,
+								ProductPartNumber:   bmcDetails.ProductPartNumber,
+								ProductSerial:       bmcDetails.ProductSerial,
+							}
+						}
+
+						board := ob.Board()
+						if board != nil {
+							biosVersion = board.BiosVersion
+						}
+					}
+
+					item := &leases.ReportItem{
+						Lease:       l,
+						FRU:         fru,
+						BmcVersion:  &bmcVersion,
+						BiosVersion: &biosVersion,
+					}
+
+					mtx.Lock()
+					items = append(items, item)
+					mtx.Unlock()
+				}()
+			}
+
+			wg.Wait()
+
+			err = r.Report(items)
 			if err != nil {
 				log.Warnw("could not report ipmi addresses", "error", err)
 			}

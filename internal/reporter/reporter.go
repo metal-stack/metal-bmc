@@ -4,7 +4,6 @@ import (
 	"github.com/metal-stack/bmc-catcher/domain"
 	"github.com/metal-stack/bmc-catcher/internal/bmc"
 	"github.com/metal-stack/bmc-catcher/internal/leases"
-	"github.com/metal-stack/go-hal/connect"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/metal-go/api/models"
 	"go.uber.org/zap"
@@ -39,60 +38,32 @@ func NewReporter(cfg *domain.Config, uuidCache *bmc.UUIDCache, log *zap.SugaredL
 }
 
 // Report will send all gathered information about machines to the metal-api
-func (r Reporter) Report(ls leases.Leases) error {
-	active := ls.FilterActive()
-	byMac := active.LatestByMac()
-	r.log.Infow("reporting leases to metal-api", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
+func (r Reporter) Report(items []*leases.ReportItem) error {
 	partitionID := r.cfg.PartitionID
 	reports := make(map[string]models.V1MachineIPMIReport)
 
 outer:
-	for mac, v := range byMac {
+	for _, item := range items {
+		mac := item.Mac
+
 		for _, m := range r.cfg.IgnoreMacs {
 			if m == mac {
 				continue outer
 			}
 		}
 
-		ip := v.Ip
+		ip := item.Ip
 		uuid, err := r.uuidCache.Get(mac, ip)
 		if err != nil {
 			r.log.Errorw("could not determine uuid of device", "mac", mac, "ip", ip, "err", err)
 			continue
 		}
 
-		ob, err := connect.OutBand(v.Ip, r.ipmiPort, r.ipmiUser, r.ipmiPassword)
-		if err != nil {
-			r.log.Errorw("could not establish outband connection to device bmc", "mac", mac, "ip", ip, "err", err)
-			continue
-		}
-
-		biosversion := ""
-		board := ob.Board()
-		if board != nil {
-			biosversion = board.BiosVersion
-		}
-		bmcDetails, err := ob.BMCConnection().BMC()
-		if err != nil {
-			r.log.Errorw("could not retrieve bmc details of device", "mac", mac, "ip", ip, "err", err)
-			continue
-		}
-
-		fru := &models.V1MachineFru{
-			BoardMfg:            bmcDetails.BoardMfg,
-			BoardMfgSerial:      bmcDetails.BoardMfgSerial,
-			BoardPartNumber:     bmcDetails.BoardPartNumber,
-			ChassisPartNumber:   bmcDetails.ChassisPartNumber,
-			ChassisPartSerial:   bmcDetails.ChassisPartSerial,
-			ProductManufacturer: bmcDetails.ProductManufacturer,
-			ProductPartNumber:   bmcDetails.ProductPartNumber,
-			ProductSerial:       bmcDetails.ProductSerial,
-		}
 		report := models.V1MachineIPMIReport{
 			BMCIP:       &ip,
-			BMCVersion:  &bmcDetails.FirmwareRevision,
-			BIOSVersion: &biosversion,
-			FRU:         fru,
+			BMCVersion:  item.BmcVersion,
+			BIOSVersion: item.BiosVersion,
+			FRU:         item.FRU,
 		}
 		reports[*uuid] = report
 	}

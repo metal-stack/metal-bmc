@@ -1,6 +1,9 @@
 package leases
 
-import "time"
+import (
+	"github.com/metal-stack/metal-go/api/models"
+	"time"
+)
 
 type Lease struct {
 	Mac   string
@@ -10,3 +13,10 @@ type Lease struct {
 }
 
 type Leases []Lease
+
+type ReportItem struct {
+	Lease
+	FRU         *models.V1MachineFru
+	BmcVersion  *string
+	BiosVersion *string
+}
