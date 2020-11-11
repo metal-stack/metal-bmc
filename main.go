@@ -72,8 +72,6 @@ outer:
 				mac := mac
 				l := l
 				go func() {
-					defer wg.Done()
-
 					bmcVersion := ""
 					biosVersion := ""
 					var fru *models.V1MachineFru
@@ -114,6 +112,7 @@ outer:
 
 					mtx.Lock()
 					items = append(items, item)
+					wg.Done()
 					mtx.Unlock()
 				}()
 			}
