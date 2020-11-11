@@ -1,8 +1,6 @@
 package main
 
 import (
-	"github.com/metal-stack/go-hal/connect"
-	"github.com/metal-stack/metal-go/api/models"
 	"os"
 	"os/signal"
 	"sync"
@@ -15,7 +13,6 @@ import (
 	"github.com/metal-stack/v"
 
 	"github.com/kelseyhightower/envconfig"
-	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
 	"go.uber.org/zap"
 	"go.universe.tf/netboot/dhcp4"
 )
@@ -68,11 +65,10 @@ outer:
 			wg := new(sync.WaitGroup)
 			wg.Add(len(byMac))
 
-			for mac, l := range byMac {
-				mac := mac
-				l := l
+			for _, l := range byMac {
+				item := leases.NewReportItem(l, cfg, log)
 				go func() {
-					item := getReportItem(mac, l.Ip, cfg, log)
+					item.EnrichWithBMCDetails()
 					mtx.Lock()
 					items = append(items, item)
 					wg.Done()
@@ -89,45 +85,6 @@ outer:
 		case <-signals:
 			break outer
 		}
-	}
-}
-
-func getReportItem(mac, ip string, cfg domain.Config, log *zap.SugaredLogger) *leases.ReportItem {
-	bmcVersion := ""
-	biosVersion := ""
-	var fru *models.V1MachineFru
-
-	ob, err := connect.OutBand(ip, cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword, halzap.New(log))
-	if err != nil {
-		log.Errorw("could not establish outband connection to device bmc", "mac", mac, "ip", ip, "err", err)
-	} else {
-		bmcDetails, err := ob.BMCConnection().BMC()
-		if err != nil {
-			log.Errorw("could not retrieve bmc details of device", "mac", mac, "ip", ip, "err", err)
-		} else {
-			bmcVersion = bmcDetails.FirmwareRevision
-			fru = &models.V1MachineFru{
-				BoardMfg:            bmcDetails.BoardMfg,
-				BoardMfgSerial:      bmcDetails.BoardMfgSerial,
-				BoardPartNumber:     bmcDetails.BoardPartNumber,
-				ChassisPartNumber:   bmcDetails.ChassisPartNumber,
-				ChassisPartSerial:   bmcDetails.ChassisPartSerial,
-				ProductManufacturer: bmcDetails.ProductManufacturer,
-				ProductPartNumber:   bmcDetails.ProductPartNumber,
-				ProductSerial:       bmcDetails.ProductSerial,
-			}
-		}
-
-		board := ob.Board()
-		if board != nil {
-			biosVersion = board.BiosVersion
-		}
-	}
-
-	return &leases.ReportItem{
-		FRU:         fru,
-		BmcVersion:  &bmcVersion,
-		BiosVersion: &biosVersion,
 	}
 }
 

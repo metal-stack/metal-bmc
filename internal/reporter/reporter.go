@@ -2,8 +2,8 @@ package reporter
 
 import (
 	"github.com/metal-stack/bmc-catcher/domain"
-	"github.com/metal-stack/bmc-catcher/internal/bmc"
 	"github.com/metal-stack/bmc-catcher/internal/leases"
+	"github.com/metal-stack/bmc-catcher/internal/uuid"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/metal-go/api/models"
 	"go.uber.org/zap"
@@ -14,7 +14,7 @@ type Reporter struct {
 	cfg        *domain.Config
 	Log        *zap.SugaredLogger
 	driver     *metalgo.Driver
-	uuidLoader *bmc.UUIDLoader
+	uuidLoader *uuid.Loader
 }
 
 // NewReporter will create a reporter for MachineIpmiReports
@@ -27,7 +27,7 @@ func NewReporter(cfg *domain.Config, log *zap.SugaredLogger, ipmiPort int, ipmiU
 		cfg:        cfg,
 		Log:        log,
 		driver:     driver,
-		uuidLoader: bmc.NewUUIDLoader(ipmiPort, ipmiUser, ipmiPassword),
+		uuidLoader: uuid.New(ipmiPort, ipmiUser, ipmiPassword),
 	}, nil
 }
 
