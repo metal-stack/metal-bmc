@@ -33,14 +33,11 @@ func (r Reporter) Report(items []*leases.ReportItem) error {
 	partitionID := r.cfg.PartitionID
 	reports := make(map[string]models.V1MachineIpmiReport)
 
-outer:
 	for _, item := range items {
 		mac := item.Mac
 
-		for _, m := range r.cfg.IgnoreMacs {
-			if m == mac {
-				continue outer
-			}
+		if item.MacContainedIn(r.cfg.IgnoreMacs) {
+			continue
 		}
 
 		ip := item.Ip
@@ -68,6 +65,7 @@ outer:
 	if err != nil {
 		return err
 	}
+
 	r.Log.Infof("updated ipmi information of %d machines", len(ok.Response.Updated))
 	for _, u := range ok.Response.Updated {
 		r.Log.Infow("ipmi information was updated for machine", "uuid", u)
@@ -75,5 +73,6 @@ outer:
 	for _, u := range ok.Response.Created {
 		r.Log.Infow("ipmi information was set and machine was created", "uuid", u)
 	}
+
 	return nil
 }

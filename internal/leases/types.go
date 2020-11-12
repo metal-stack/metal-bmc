@@ -30,3 +30,12 @@ func NewReportItem(l Lease, log *zap.SugaredLogger) *ReportItem {
 		Log:   log,
 	}
 }
+
+func (i *ReportItem) MacContainedIn(macs []string) bool {
+	for _, m := range macs {
+		if m == i.Mac {
+			return true
+		}
+	}
+	return false
+}
