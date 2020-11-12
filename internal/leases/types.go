@@ -20,9 +20,10 @@ type ReportItem struct {
 	Lease
 	Config      domain.Config
 	Log         *zap.SugaredLogger
-	FRU         *models.V1MachineFru
+	UUID        *string
 	BmcVersion  *string
 	BiosVersion *string
+	FRU         *models.V1MachineFru
 }
 
 func NewReportItem(l Lease, cfg domain.Config, log *zap.SugaredLogger) *ReportItem {

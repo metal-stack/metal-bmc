@@ -33,5 +33,11 @@ func (i *ReportItem) EnrichWithBMCDetails() {
 		if board != nil {
 			i.BiosVersion = &board.BiosVersion
 		}
+
+		u, err := ob.UUID()
+		if err != nil {
+			str := u.String()
+			i.UUID = &str
+		}
 	}
 }

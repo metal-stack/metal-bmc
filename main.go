@@ -28,7 +28,7 @@ func main() {
 
 	log.Infow("loaded configuration", "config", cfg)
 
-	r, err := reporter.NewReporter(&cfg, log, cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
+	r, err := reporter.NewReporter(&cfg, log)
 	if err != nil {
 		log.Fatalw("could not start reporter", "error", err)
 	}
