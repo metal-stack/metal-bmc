@@ -27,7 +27,7 @@ func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword s
 			ProductSerial:       bmcDetails.ProductSerial,
 		}
 	} else {
-		i.Log.Errorw("could not retrieve bmc details of device", "mac", i.Mac, "ip", i.Ip, "err", err)
+		i.Log.Warnw("could not retrieve bmc details of device", "mac", i.Mac, "ip", i.Ip, "err", err)
 	}
 
 	board := ob.Board()
@@ -40,6 +40,6 @@ func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword s
 		str := u.String()
 		i.UUID = &str
 	} else {
-		i.Log.Errorw("could not determine uuid of device", "mac", i.Mac, "ip", i.Ip, "err", err)
+		i.Log.Warnw("could not determine uuid of device", "mac", i.Mac, "ip", i.Ip, "err", err)
 	}
 }
