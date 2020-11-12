@@ -6,15 +6,14 @@ import (
 	"github.com/metal-stack/metal-go/api/models"
 )
 
-func (i *ReportItem) EnrichWithBMCDetails() {
-	ip := i.Ip
-	ob, err := connect.OutBand(ip, i.Config.IpmiPort, i.Config.IpmiUser, i.Config.IpmiPassword, halzap.New(i.Log))
+func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword string) {
+	ob, err := connect.OutBand(i.Ip, ipmiPort, ipmiUser, ipmiPassword, halzap.New(i.Log))
 	if err != nil {
-		i.Log.Errorw("could not establish outband connection to device bmc", "mac", i.Mac, "ip", ip, "err", err)
+		i.Log.Errorw("could not establish outband connection to device bmc", "mac", i.Mac, "ip", i.Ip, "err", err)
 	} else {
 		bmcDetails, err := ob.BMCConnection().BMC()
 		if err != nil {
-			i.Log.Errorw("could not retrieve bmc details of device", "mac", i.Mac, "ip", ip, "err", err)
+			i.Log.Errorw("could not retrieve bmc details of device", "mac", i.Mac, "ip", i.Ip, "err", err)
 		} else {
 			i.BmcVersion = &bmcDetails.FirmwareRevision
 			i.FRU = &models.V1MachineFru{

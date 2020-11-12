@@ -66,9 +66,9 @@ outer:
 			wg.Add(len(byMac))
 
 			for _, l := range byMac {
-				item := leases.NewReportItem(l, cfg, log)
+				item := leases.NewReportItem(l, log)
 				go func() {
-					item.EnrichWithBMCDetails()
+					item.EnrichWithBMCDetails(cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
 					mtx.Lock()
 					items = append(items, item)
 					wg.Done()

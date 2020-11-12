@@ -1,7 +1,6 @@
 package leases
 
 import (
-	"github.com/metal-stack/bmc-catcher/domain"
 	"github.com/metal-stack/metal-go/api/models"
 	"go.uber.org/zap"
 	"time"
@@ -18,7 +17,6 @@ type Leases []Lease
 
 type ReportItem struct {
 	Lease
-	Config      domain.Config
 	Log         *zap.SugaredLogger
 	UUID        *string
 	BmcVersion  *string
@@ -26,10 +24,9 @@ type ReportItem struct {
 	FRU         *models.V1MachineFru
 }
 
-func NewReportItem(l Lease, cfg domain.Config, log *zap.SugaredLogger) *ReportItem {
+func NewReportItem(l Lease, log *zap.SugaredLogger) *ReportItem {
 	return &ReportItem{
-		Lease:  l,
-		Config: cfg,
-		Log:    log,
+		Lease: l,
+		Log:   log,
 	}
 }
