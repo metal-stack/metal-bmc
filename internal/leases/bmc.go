@@ -34,7 +34,7 @@ func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword s
 		}
 
 		u, err := ob.UUID()
-		if err != nil && u != nil {
+		if err == nil {
 			str := u.String()
 			i.UUID = &str
 		}
