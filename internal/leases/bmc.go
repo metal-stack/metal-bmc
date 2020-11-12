@@ -35,7 +35,7 @@ func (i *ReportItem) EnrichWithBMCDetails() {
 		}
 
 		u, err := ob.UUID()
-		if err != nil {
+		if err != nil && u != nil {
 			str := u.String()
 			i.UUID = &str
 		}
