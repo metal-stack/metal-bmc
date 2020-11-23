@@ -9,15 +9,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Docker Image
-      uses: metal-stack/action-docker-make@master
-      with:
-        username: ${{ secrets.DOCKER_HUB_USER }}
-        password: ${{ secrets.DOCKER_HUB_TOKEN }}
-        args: --no-lint -b master
-    - uses: release-drafter/release-drafter@v5
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@v2
 
+      - name: Lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.32.2
+
+      - name: Docker Image
+        uses: fi-ts/action-docker-make@master
+        with:
+          username: ${{ secrets.DOCKER_REGISTRY_USER }}
+          password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+          args: --no-lint -b master
+
+      - uses: release-drafter/release-drafter@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
