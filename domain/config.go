@@ -22,6 +22,6 @@ type Config struct {
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf("loglevel:%s partition:%s leasefile:%s debounce interval:%s report interval:%s metal-api url:%s ipmiport:%d ipmiuser:%s",
-		c.LogLevel, c.PartitionID, c.LeaseFile, c.DebounceInterval, c.ReportInterval, c.MetalAPIURL, c.IpmiPort, c.IpmiUser)
+	return fmt.Sprintf("loglevel:%s partition:%s leasefile:%s debounce interval:%s report interval:%s metal-api url:%s ipmiport:%d ipmiuser:%s, ignored-macs:%v",
+		c.LogLevel, c.PartitionID, c.LeaseFile, c.DebounceInterval, c.ReportInterval, c.MetalAPIURL, c.IpmiPort, c.IpmiUser, c.IgnoreMacs)
 }

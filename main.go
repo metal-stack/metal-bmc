@@ -3,11 +3,11 @@ package main
 import (
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/metal-stack/bmc-catcher/domain"
-	"github.com/metal-stack/bmc-catcher/internal/bmc"
 	"github.com/metal-stack/bmc-catcher/internal/leases"
 	"github.com/metal-stack/bmc-catcher/internal/reporter"
 	"github.com/metal-stack/v"
@@ -27,27 +27,10 @@ func main() {
 	}
 
 	log.Infow("loaded configuration", "config", cfg)
-	l, err := leases.ReadLeases(cfg.LeaseFile)
-	if err != nil {
-		log.Fatalw("could not parse leases file", "error", err)
-	}
 
-	log.Info("warming up cache")
-	leasesByMac := l.LatestByMac()
-	macToIps := map[string]string{}
-	for m, l := range leasesByMac {
-		macToIps[m] = l.Ip
-	}
-	uuidCache := bmc.NewUUIDCache(cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
-	uuidCache.Warmup(macToIps)
-
-	r, err := reporter.NewReporter(&cfg, &uuidCache, log, cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
+	r, err := reporter.NewReporter(&cfg, log)
 	if err != nil {
 		log.Fatalw("could not start reporter", "error", err)
-	}
-	err = r.Report(l)
-	if err != nil {
-		log.Fatalw("could not send initial report of ipmi addresses", "error", err)
 	}
 
 	periodic := time.NewTicker(cfg.ReportInterval)
@@ -68,11 +51,34 @@ outer:
 		case <-dhcpEvents:
 			debounced.Reset(cfg.DebounceInterval)
 		case <-debounced.C:
-			l, err := leases.ReadLeases(cfg.LeaseFile)
+			ls, err := leases.ReadLeases(cfg.LeaseFile)
 			if err != nil {
 				log.Fatalw("could not parse leases file", "error", err)
 			}
-			err = r.Report(l)
+			active := ls.FilterActive()
+			byMac := active.LatestByMac()
+			log.Infow("reporting leases to metal-api", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
+
+			mtx := new(sync.Mutex)
+			var items []*leases.ReportItem
+
+			wg := new(sync.WaitGroup)
+			wg.Add(len(byMac))
+
+			for _, l := range byMac {
+				item := leases.NewReportItem(l, log)
+				go func() {
+					item.EnrichWithBMCDetails(cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
+					mtx.Lock()
+					items = append(items, item)
+					wg.Done()
+					mtx.Unlock()
+				}()
+			}
+
+			wg.Wait()
+
+			err = r.Report(items)
 			if err != nil {
 				log.Warnw("could not report ipmi addresses", "error", err)
 			}
