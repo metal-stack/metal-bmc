@@ -1,8 +1,8 @@
 package leases
 
 import (
-	"github.com/pkg/errors"
-	"io/ioutil"
+	"fmt"
+	"os"
 	"time"
 )
 
@@ -34,13 +34,13 @@ func ReadLeases(leaseFile string) (Leases, error) {
 	leasesContent := mustRead(leaseFile)
 	leases, err := Parse(leasesContent)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not parse leases file")
+		return nil, fmt.Errorf("could not parse leases file:%w", err)
 	}
 	return leases, nil
 }
 
 func mustRead(name string) string {
-	c, err := ioutil.ReadFile(name)
+	c, err := os.ReadFile(name)
 	if err != nil {
 		panic(err)
 	}
