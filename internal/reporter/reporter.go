@@ -51,6 +51,7 @@ func (r Reporter) Report(items []*leases.ReportItem) error {
 			BMCVersion:  item.BmcVersion,
 			BIOSVersion: item.BiosVersion,
 			FRU:         item.FRU,
+			PowerState:  item.Powerstate,
 		}
 		reports[*item.UUID] = report
 	}
