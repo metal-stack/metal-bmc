@@ -1,6 +1,7 @@
 package leases
 
 import (
+	"github.com/metal-stack/go-hal"
 	"github.com/metal-stack/go-hal/connect"
 	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
 	"github.com/metal-stack/metal-go/api/models"
@@ -29,6 +30,13 @@ func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword s
 	} else {
 		i.Log.Warnw("could not retrieve bmc details of device", "mac", i.Mac, "ip", i.Ip, "err", err)
 	}
+
+	powerState, err := ob.PowerState()
+	state := hal.PowerUnknownState.String()
+	if err == nil {
+		state = powerState.String()
+	}
+	i.Powerstate = &state
 
 	board := ob.Board()
 	if board != nil {

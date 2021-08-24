@@ -1,9 +1,10 @@
 package leases
 
 import (
+	"time"
+
 	"github.com/metal-stack/metal-go/api/models"
 	"go.uber.org/zap"
-	"time"
 )
 
 type Lease struct {
@@ -22,6 +23,7 @@ type ReportItem struct {
 	BmcVersion  *string
 	BiosVersion *string
 	FRU         *models.V1MachineFru
+	Powerstate  *string
 }
 
 func NewReportItem(l Lease, log *zap.SugaredLogger) *ReportItem {
