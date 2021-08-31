@@ -39,7 +39,6 @@ func main() {
 		log.Fatalw("could not initialize dhcp snooper", "error", err)
 	}
 	debounced := time.NewTimer(cfg.DebounceInterval)
-	debounced.Stop()
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
@@ -86,6 +85,7 @@ outer:
 			break outer
 		}
 	}
+	debounced.Stop()
 }
 
 func snoopDhcpEvents() (chan dhcp4.Packet, error) {
