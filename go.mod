@@ -9,5 +9,4 @@ require (
 	github.com/metal-stack/v v1.0.3
 	github.com/stretchr/testify v1.7.0
 	go.uber.org/zap v1.19.0
-	go.universe.tf/netboot v0.0.0-20210617221821-fc2840fa7b05
 )
