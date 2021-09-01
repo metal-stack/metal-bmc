@@ -14,7 +14,6 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
-	"go.universe.tf/netboot/dhcp4"
 )
 
 func main() {
@@ -34,23 +33,12 @@ func main() {
 	}
 
 	periodic := time.NewTicker(cfg.ReportInterval)
-	dhcpEvents, err := snoopDhcpEvents()
-	if err != nil {
-		log.Fatalw("could not initialize dhcp snooper", "error", err)
-	}
-	debounced := time.NewTimer(cfg.DebounceInterval)
-	debounced.Stop()
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
-outer:
 	for {
 		select {
 		case <-periodic.C:
-			debounced.Reset(cfg.DebounceInterval)
-		case <-dhcpEvents:
-			debounced.Reset(cfg.DebounceInterval)
-		case <-debounced.C:
 			ls, err := leases.ReadLeases(cfg.LeaseFile)
 			if err != nil {
 				log.Fatalw("could not parse leases file", "error", err)
@@ -83,24 +71,7 @@ outer:
 				log.Warnw("could not report ipmi addresses", "error", err)
 			}
 		case <-signals:
-			break outer
+			return
 		}
 	}
-}
-
-func snoopDhcpEvents() (chan dhcp4.Packet, error) {
-	c := make(chan dhcp4.Packet, 10)
-	dhcp, err := dhcp4.NewSnooperConn("0.0.0.0:67")
-	if err != nil {
-		return nil, err
-	}
-	go func() {
-		for {
-			p, _, err := dhcp.RecvDHCP()
-			if err == nil {
-				c <- *p
-			}
-		}
-	}()
-	return c, nil
 }
