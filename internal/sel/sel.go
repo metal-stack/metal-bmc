@@ -22,7 +22,7 @@ import (
 type selRunner struct {
 	cfg    *domain.Config
 	driver *metalgo.Driver
-	cache  machineCache
+	cache  *machineCache
 	log    *zap.SugaredLogger
 }
 
@@ -35,11 +35,18 @@ type machineCache struct {
 }
 
 func New(cfg *domain.Config, driver *metalgo.Driver, log *zap.SugaredLogger) *selRunner {
+
+	cache := &machineCache{
+		driver:   driver,
+		log:      log,
+		cfg:      cfg,
+		machines: make(map[string]*models.V1MachineIPMI),
+	}
 	return &selRunner{
 		cfg:    cfg,
 		driver: driver,
 		log:    log,
-		cache:  machineCache{driver: driver, log: log, cfg: cfg},
+		cache:  cache,
 	}
 }
 
