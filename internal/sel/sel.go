@@ -47,6 +47,10 @@ func (s *selRunner) Run() {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
+	// run once on startup
+	s.cache.updateCache()
+	s.fetchSel()
+
 	cacheTicker := time.NewTicker(time.Hour * 24)
 	go func() {
 		for {
@@ -72,12 +76,14 @@ func (s *selRunner) Run() {
 }
 
 func (s *selRunner) fetchSel() {
-
+	s.log.Info("start fetching ipmi system event log")
 	// FIXME use context to cancel ipmi sel list call
 	g, _ := errgroup.WithContext(context.TODO())
 
 	for uuid := range s.cache.machines {
 		uuid := uuid
+		s.log.Infow("fetch ipmi system event log", "machine", uuid)
+
 		ipmi := s.cache.machines[uuid]
 		if ipmi == nil || ipmi.Address == nil || ipmi.User == nil || ipmi.Password == nil {
 			continue
@@ -113,6 +119,7 @@ func (s *selRunner) fetchSel() {
 }
 
 func (m *machineCache) updateCache() {
+	m.log.Info("fill machine ipmi cache")
 	m.Lock()
 	defer m.Unlock()
 
