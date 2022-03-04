@@ -1,15 +1,10 @@
 package main
 
 import (
-	"os"
-	"os/signal"
-	"sync"
-	"syscall"
-	"time"
-
 	"github.com/metal-stack/bmc-catcher/domain"
 	"github.com/metal-stack/bmc-catcher/internal/leases"
-	"github.com/metal-stack/bmc-catcher/internal/reporter"
+	"github.com/metal-stack/bmc-catcher/internal/sel"
+	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
 
 	"github.com/kelseyhightower/envconfig"
@@ -27,51 +22,21 @@ func main() {
 
 	log.Infow("loaded configuration", "config", cfg)
 
-	r, err := reporter.NewReporter(&cfg, log)
+	driver, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey, metalgo.AuthType("Metal-Edit"))
+	if err != nil {
+		log.Fatalw("could not create metal-go driver", "error", err)
+	}
+
+	r, err := leases.NewReporter(&cfg, driver, log)
 	if err != nil {
 		log.Fatalw("could not start reporter", "error", err)
 	}
 
-	periodic := time.NewTicker(cfg.ReportInterval)
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+	s := sel.New(&cfg, driver, log)
 
-	for {
-		select {
-		case <-periodic.C:
-			ls, err := leases.ReadLeases(cfg.LeaseFile)
-			if err != nil {
-				log.Fatalw("could not parse leases file", "error", err)
-			}
-			active := ls.FilterActive()
-			byMac := active.LatestByMac()
-			log.Infow("reporting leases to metal-api", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
+	go s.Run()
 
-			mtx := new(sync.Mutex)
-			var items []*leases.ReportItem
+	lr := leases.New(&cfg, r, log)
+	lr.Run() // Blocking call
 
-			wg := new(sync.WaitGroup)
-			wg.Add(len(byMac))
-
-			for _, l := range byMac {
-				item := leases.NewReportItem(l, log)
-				go func() {
-					item.EnrichWithBMCDetails(cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
-					mtx.Lock()
-					items = append(items, item)
-					wg.Done()
-					mtx.Unlock()
-				}()
-			}
-
-			wg.Wait()
-
-			err = r.Report(items)
-			if err != nil {
-				log.Warnw("could not report ipmi addresses", "error", err)
-			}
-		case <-signals:
-			return
-		}
-	}
 }
