@@ -41,6 +41,7 @@ func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword s
 	board := ob.Board()
 	if board != nil {
 		i.BiosVersion = &board.BiosVersion
+		i.IndicatorLED = &board.IndicatorLED
 	}
 
 	u, err := ob.UUID()

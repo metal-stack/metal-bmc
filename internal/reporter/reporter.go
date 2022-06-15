@@ -17,7 +17,7 @@ type Reporter struct {
 
 // NewReporter will create a reporter for MachineIpmiReports
 func NewReporter(cfg *domain.Config, log *zap.SugaredLogger) (*Reporter, error) {
-	driver, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey, metalgo.AuthType("Metal-Edit"))
+	_, driver, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey, metalgo.AuthType("Metal-Edit"))
 	if err != nil {
 		return nil, err
 	}
@@ -47,11 +47,12 @@ func (r Reporter) Report(items []*leases.ReportItem) error {
 		}
 
 		report := models.V1MachineIpmiReport{
-			BMCIP:       &item.Ip,
-			BMCVersion:  item.BmcVersion,
-			BIOSVersion: item.BiosVersion,
-			FRU:         item.FRU,
-			PowerState:  item.Powerstate,
+			BMCIP:             &item.Ip,
+			BMCVersion:        item.BmcVersion,
+			BIOSVersion:       item.BiosVersion,
+			FRU:               item.FRU,
+			PowerState:        item.Powerstate,
+			IndicatorLEDState: item.IndicatorLED,
 		}
 		reports[*item.UUID] = report
 	}
@@ -62,6 +63,7 @@ func (r Reporter) Report(items []*leases.ReportItem) error {
 			Reports:     reports,
 		},
 	}
+
 	ok, err := r.driver.MachineIPMIReport(mir)
 	if err != nil {
 		return err

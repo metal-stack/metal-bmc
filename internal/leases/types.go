@@ -18,12 +18,13 @@ type Leases []Lease
 
 type ReportItem struct {
 	Lease
-	Log         *zap.SugaredLogger
-	UUID        *string
-	BmcVersion  *string
-	BiosVersion *string
-	FRU         *models.V1MachineFru
-	Powerstate  *string
+	Log          *zap.SugaredLogger
+	UUID         *string
+	BmcVersion   *string
+	BiosVersion  *string
+	FRU          *models.V1MachineFru
+	Powerstate   *string
+	IndicatorLED *string
 }
 
 func NewReportItem(l Lease, log *zap.SugaredLogger) *ReportItem {

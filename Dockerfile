@@ -1,6 +1,6 @@
 FROM metalstack/builder:latest as builder
 
-FROM alpine:3.15
+FROM alpine:3.16
 
 RUN apk add \
     ca-certificates \
