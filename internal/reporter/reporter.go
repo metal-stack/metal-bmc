@@ -63,6 +63,9 @@ func (r Reporter) Report(items []*leases.ReportItem) error {
 			Reports:     reports,
 		},
 	}
+
+	r.Log.Debugf("send ipmi reports: %#v", mir)
+
 	ok, err := r.driver.MachineIPMIReport(mir)
 	if err != nil {
 		return err
