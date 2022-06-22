@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/metal-stack/bmc-catcher/domain"
+	"github.com/metal-stack/bmc-catcher/internal/bmc"
 	"github.com/metal-stack/bmc-catcher/internal/leases"
 	"github.com/metal-stack/bmc-catcher/internal/reporter"
 	"github.com/metal-stack/v"
@@ -26,6 +27,20 @@ func main() {
 	}
 
 	log.Infow("loaded configuration", "config", cfg)
+
+	b := bmc.New(bmc.Config{
+		Log:              log,
+		MQAddress:        cfg.MQAddress,
+		MQCACertFile:     cfg.MQCACertFile,
+		MQClientCertFile: cfg.MQClientCertFile,
+		MQLogLevel:       cfg.MQLogLevel,
+		MachineTopic:     cfg.MachineTopic,
+		MachineTopicTTL:  cfg.MachineTopicTTL,
+	})
+	err := b.InitConsumer()
+	if err != nil {
+		log.Fatalw("unable to create bmcservice", "error", err)
+	}
 
 	r, err := reporter.NewReporter(&cfg, log)
 	if err != nil {
