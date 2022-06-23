@@ -1,10 +1,17 @@
 FROM metalstack/builder:latest as builder
 
-FROM alpine:3.16
+FROM r.metal-stack.io/metal/supermicro:2.5.2 as sum
 
-RUN apk add \
+FROM debian:11-slim
+
+RUN apt update \
+ && apt install --yes --no-install-recommends \
     ca-certificates \
-    ipmitool
+    ipmitool \
+ # /usr/bin/sum is provided by busybox
+ && rm /usr/bin/sum
+
 COPY --from=builder /work/bin/bmc-catcher /
+COPY --from=sum /usr/bin/sum /usr/bin/sum
 
 CMD ["/bmc-catcher"]
