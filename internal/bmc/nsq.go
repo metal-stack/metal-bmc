@@ -92,7 +92,7 @@ func (b *BMCService) InitConsumer() error {
 				case ChassisIdentifyLEDOffCmd:
 					return outBand.IdentifyLEDOff()
 				case UpdateFirmwareCmd:
-					b.UpdateFirmware(outBand, event)
+					return b.UpdateFirmware(outBand, event)
 				default:
 					b.log.Errorw("unhandled command", "topic", b.machineTopic, "channel", "core", "event", event)
 				}
@@ -102,8 +102,7 @@ func (b *BMCService) InitConsumer() error {
 				b.log.Warnw("unhandled event", "topic", b.machineTopic, "channel", "core", "event", event)
 			}
 			return nil
-			// FIXME machineTopicTTL should be configured as Duration in config.go
-		}, 5, bus.Timeout(receiverHandlerTimeout, b.timeoutHandler), bus.TTL(time.Duration(b.machineTopicTTL)*time.Millisecond))
+		}, 5, bus.Timeout(receiverHandlerTimeout, b.timeoutHandler), bus.TTL(b.machineTopicTTL))
 
 	return err
 }

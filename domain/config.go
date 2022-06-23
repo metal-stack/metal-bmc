@@ -18,10 +18,10 @@ type Config struct {
 	IpmiPassword    string        `required:"false" default:"ADMIN" desc:"the ipmi password" split_words:"true"`
 	IgnoreMacs      []string      `required:"false" desc:"mac addresses to ignore" split_words:"true"`
 
-	MQAddress        string `required:"false" default:"localhost:4161" desc:"set the MQ server address" envconfig:"mq_address"`
-	MQCACertFile     string `required:"false" default:"" desc:"the CA certificate file for verifying MQ certificate" envconfig:"mq_ca_cert_file"`
-	MQClientCertFile string `required:"false" default:"" desc:"the client certificate file for accessing MQ" envconfig:"mq_client_cert_file"`
-	MQLogLevel       string `required:"false" default:"info" desc:"sets the MQ loglevel (debug, info, warn, error)" envconfig:"mq_loglevel"`
-	MachineTopic     string `required:"false" default:"machine" desc:"set the machine topic name" split_words:"true"`
-	MachineTopicTTL  int    `required:"false" default:"30000" desc:"sets the TTL in milliseconds for MachineTopic" envconfig:"machine_topic_ttl"`
+	MQAddress        string        `required:"false" default:"localhost:4161" desc:"set the MQ server address" envconfig:"mq_address"`
+	MQCACertFile     string        `required:"false" default:"" desc:"the CA certificate file for verifying MQ certificate" envconfig:"mq_ca_cert_file"`
+	MQClientCertFile string        `required:"false" default:"" desc:"the client certificate file for accessing MQ" envconfig:"mq_client_cert_file"`
+	MQLogLevel       string        `required:"false" default:"info" desc:"sets the MQ loglevel (debug, info, warn, error)" envconfig:"mq_loglevel"`
+	MachineTopic     string        `required:"false" default:"machine" desc:"set the machine topic name" split_words:"true"`
+	MachineTopicTTL  time.Duration `required:"false" default:"30s" desc:"sets the TTL for MachineTopic" envconfig:"machine_topic_ttl"`
 }

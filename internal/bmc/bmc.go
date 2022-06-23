@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/metal-stack/go-hal"
 	"github.com/metal-stack/go-hal/connect"
@@ -20,7 +21,7 @@ type BMCService struct {
 	mqClientCertFile string
 	mqLogLevel       string
 	machineTopic     string
-	machineTopicTTL  int
+	machineTopicTTL  time.Duration
 }
 
 type Config struct {
@@ -30,7 +31,7 @@ type Config struct {
 	MQClientCertFile string
 	MQLogLevel       string
 	MachineTopic     string
-	MachineTopicTTL  int
+	MachineTopicTTL  time.Duration
 }
 
 func New(c Config) *BMCService {
@@ -53,10 +54,10 @@ type MachineEvent struct {
 }
 
 type MachineExecCommand struct {
-	TargetMachineID string         `json:"target,omitempty"`
-	Command         MachineCommand `json:"cmd,omitempty"`
-	Params          []string       `json:"params,omitempty"`
-	IPMI            *IPMI          `json:"ipmi,omitempty"`
+	TargetMachineID string          `json:"target,omitempty"`
+	Command         MachineCommand  `json:"cmd,omitempty"`
+	IPMI            *IPMI           `json:"ipmi,omitempty"`
+	FirmwareUpdate  *FirmwareUpdate `json:"firmwareupdate,omitempty"`
 }
 
 type IPMI struct {
@@ -67,12 +68,18 @@ type IPMI struct {
 	Fru      Fru    `json:"fru"`
 }
 
+type FirmwareUpdate struct {
+	Kind string `json:"kind"`
+	URL  string `json:"url"`
+}
+
 type Fru struct {
 	BoardPartNumber string `json:"board_part_number"`
 }
 
 type MachineCommand string
 
+// FIXME these constants must move to a single location
 const (
 	MachineOnCmd             MachineCommand = "ON"
 	MachineOffCmd            MachineCommand = "OFF"
@@ -89,6 +96,7 @@ const (
 
 type EventType string
 
+// FIXME these constants must move to a single location
 const (
 	Create  EventType = "create"
 	Update  EventType = "update"
