@@ -8,6 +8,7 @@ import (
 )
 
 func (b *BMCService) UpdateFirmware(outBand hal.OutBand, event *MachineEvent) error {
+	b.log.Infow("update firmware", "event", event)
 	if event.Cmd.FirmwareUpdate == nil {
 		return fmt.Errorf("firmwareupdate is nil")
 	}
@@ -15,6 +16,7 @@ func (b *BMCService) UpdateFirmware(outBand hal.OutBand, event *MachineEvent) er
 	fw := event.Cmd.FirmwareUpdate
 	switch fw.Kind {
 	case string(metalgo.Bios):
+		b.log.Infow("update firmware bios", "download url", fw.URL)
 		go func() {
 			err := outBand.UpdateBIOS(fw.URL)
 			if err != nil {
@@ -22,6 +24,7 @@ func (b *BMCService) UpdateFirmware(outBand hal.OutBand, event *MachineEvent) er
 			}
 		}()
 	case string(metalgo.Bmc):
+		b.log.Infow("update firmware bmc", "download url", fw.URL)
 		go func() {
 			err := outBand.UpdateBMC(fw.URL)
 			if err != nil {
