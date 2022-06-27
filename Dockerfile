@@ -1,6 +1,6 @@
 FROM metalstack/builder:latest as builder
 
-FROM r.metal-stack.io/metal/supermicro:2.5.2 as sum
+FROM r.metal-stack.io/metal/supermicro:2.8.1 as sum
 
 FROM debian:11-slim
 
