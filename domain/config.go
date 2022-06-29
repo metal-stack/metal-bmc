@@ -24,4 +24,6 @@ type Config struct {
 	MQLogLevel       string        `required:"false" default:"warn" desc:"sets the MQ loglevel (debug, info, warn, error)" envconfig:"mq_loglevel"`
 	MachineTopic     string        `required:"false" default:"machine" desc:"set the machine topic name" split_words:"true"`
 	MachineTopicTTL  time.Duration `required:"false" default:"30s" desc:"sets the TTL for MachineTopic" envconfig:"machine_topic_ttl"`
+
+	ConsolePort int `required:"false" default:"4444" desc:"defines the port where to listen for incoming console connections from metal-console" envconfig:"console_port"`
 }

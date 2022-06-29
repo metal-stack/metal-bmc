@@ -9,6 +9,8 @@ import (
 
 	"github.com/metal-stack/bmc-catcher/domain"
 	"github.com/metal-stack/bmc-catcher/internal/bmc"
+	"github.com/metal-stack/bmc-catcher/internal/bmcproxy"
+
 	"github.com/metal-stack/bmc-catcher/internal/leases"
 	"github.com/metal-stack/bmc-catcher/internal/reporter"
 	"github.com/metal-stack/v"
@@ -28,6 +30,7 @@ func main() {
 
 	log.Infow("loaded configuration", "config", cfg)
 
+	// BMC Events via NSQ
 	b := bmc.New(bmc.Config{
 		Log:              log,
 		MQAddress:        cfg.MQAddress,
@@ -41,6 +44,9 @@ func main() {
 	if err != nil {
 		log.Fatalw("unable to create bmcservice", "error", err)
 	}
+
+	// BMC Console access
+	go bmcproxy.New(log, cfg.ConsolePort).Run()
 
 	r, err := reporter.NewReporter(&cfg, log)
 	if err != nil {

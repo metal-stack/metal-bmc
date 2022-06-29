@@ -8,6 +8,7 @@ RUN apt update \
  && apt install --yes --no-install-recommends \
     ca-certificates \
     ipmitool \
+    libvirt-client \
  # /usr/bin/sum is provided by busybox
  && rm /usr/bin/sum
 

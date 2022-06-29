@@ -3,6 +3,7 @@ module github.com/metal-stack/bmc-catcher
 go 1.18
 
 require (
+	github.com/gliderlabs/ssh v0.3.4
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-hal v0.4.2
 	github.com/metal-stack/metal-go v0.18.5
@@ -10,6 +11,7 @@ require (
 	github.com/metal-stack/v v1.0.3
 	github.com/stretchr/testify v1.7.4
 	go.uber.org/zap v1.21.0
+	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
 )
 
 require (
@@ -20,7 +22,6 @@ require (
 	github.com/creack/pty v1.1.18 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
-	github.com/gliderlabs/ssh v0.3.4 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-openapi/analysis v0.21.3 // indirect
 	github.com/go-openapi/errors v0.20.2 // indirect
@@ -61,7 +62,6 @@ require (
 	go.mongodb.org/mongo-driver v1.9.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
 	golang.org/x/net v0.0.0-20220622184535-263ec571b305 // indirect
 	golang.org/x/oauth2 v0.0.0-20220622183110-fd043fe589d2 // indirect
 	golang.org/x/sys v0.0.0-20220622161953-175b2fd9d664 // indirect
