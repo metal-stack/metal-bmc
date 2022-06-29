@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"sync"
@@ -15,18 +16,33 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func main() {
-	logger, _ := zap.NewProduction()
-	log := logger.Sugar()
-	log.Infow("running app version", "version", v.V.String())
 	var cfg domain.Config
 	if err := envconfig.Process("BMC_CATCHER", &cfg); err != nil {
-		log.Fatalw("bad configuration", "error", err)
+		panic(fmt.Errorf("bad configuration: %w", err))
 	}
 
-	log.Infow("loaded configuration", "config", cfg)
+	level, err := zap.ParseAtomicLevel(cfg.LogLevel)
+	if err != nil {
+		panic(fmt.Errorf("can't initialize zap logger: %w", err))
+	}
+
+	zcfg := zap.NewProductionConfig()
+	zcfg.EncoderConfig.TimeKey = "timestamp"
+	zcfg.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
+	zcfg.Level = level
+
+	l, err := zcfg.Build()
+	if err != nil {
+		panic(fmt.Errorf("can't initialize zap logger: %w", err))
+	}
+
+	log := l.Sugar()
+	log.Infow("running app version", "version", v.V.String())
+	log.Infow("configuration", "config", cfg)
 
 	b := bmc.New(bmc.Config{
 		Log:              log,
@@ -37,7 +53,8 @@ func main() {
 		MachineTopic:     cfg.MachineTopic,
 		MachineTopicTTL:  cfg.MachineTopicTTL,
 	})
-	err := b.InitConsumer()
+
+	err = b.InitConsumer()
 	if err != nil {
 		log.Fatalw("unable to create bmcservice", "error", err)
 	}
