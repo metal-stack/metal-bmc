@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io"
-	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -21,9 +20,10 @@ import (
 )
 
 type bmcConsole struct {
-	log      *zap.SugaredLogger
-	listener net.Listener
-	hostKey  gossh.Signer
+	log       *zap.SugaredLogger
+	tlsConfig *tls.Config
+	port      int
+	hostKey   gossh.Signer
 }
 
 func New(log *zap.SugaredLogger, caCertFile, certFile, keyFile string, port int) (*bmcConsole, error) {
@@ -48,30 +48,30 @@ func New(log *zap.SugaredLogger, caCertFile, certFile, keyFile string, port int)
 		MinVersion:   tls.VersionTLS13,
 	}
 
-	ln, err := tls.Listen("tcp", fmt.Sprintf(":%d", port), tlsConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create listener: %w", err)
-	}
 	hostKey, err := loadHostKey()
 	if err != nil {
 		return nil, fmt.Errorf("cannot load host key %w", err)
 	}
 	return &bmcConsole{
-		log:      log,
-		listener: ln,
-		hostKey:  hostKey,
+		log:       log,
+		tlsConfig: tlsConfig,
+		port:      port,
+		hostKey:   hostKey,
 	}, nil
 }
 
-// Run starts ssh server and listen for console connections.
-func (c *bmcConsole) Run() {
+// ListenAndServe starts ssh server and listen for console connections.
+func (c *bmcConsole) ListenAndServe() error {
 	s := &ssh.Server{
 		Handler: c.sessionHandler,
 	}
 	s.AddHostKey(c.hostKey)
-
+	listener, err := tls.Listen("tcp", fmt.Sprintf(":%d", c.port), c.tlsConfig)
+	if err != nil {
+		return fmt.Errorf("failed to create listener: %w", err)
+	}
 	c.log.Infow("starting ssh server", "address", s.Addr)
-	c.log.Fatal(s.Serve(c.listener))
+	return s.Serve(listener)
 }
 
 // FIXME broken error handling, should also be printed to the session

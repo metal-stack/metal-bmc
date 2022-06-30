@@ -67,7 +67,9 @@ func main() {
 	if err != nil {
 		log.Fatalw("unable to create bmcconsole", "error", err)
 	}
-	go console.Run()
+	go func() {
+		log.Fatal(console.ListenAndServe())
+	}()
 
 	// Report IPMI Details
 	r, err := reporter.NewReporter(&cfg, log)
