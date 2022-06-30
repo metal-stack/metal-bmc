@@ -10,7 +10,6 @@ import (
 
 	"github.com/metal-stack/bmc-catcher/domain"
 	"github.com/metal-stack/bmc-catcher/internal/bmc"
-	"github.com/metal-stack/bmc-catcher/internal/bmcconsole"
 
 	"github.com/metal-stack/bmc-catcher/internal/leases"
 	"github.com/metal-stack/bmc-catcher/internal/reporter"
@@ -59,13 +58,13 @@ func main() {
 
 	err = b.InitConsumer()
 	if err != nil {
-		log.Fatalw("unable to create bmcservice", "error", err)
+		log.Fatalw("unable to create bmc service", "error", err)
 	}
 
 	// BMC Console access
-	console, err := bmcconsole.New(log, cfg.ConsoleCACertFile, cfg.ConsoleCertFile, cfg.ConsoleKeyFile, cfg.ConsolePort)
+	console, err := bmc.NewConsole(log, cfg.ConsoleCACertFile, cfg.ConsoleCertFile, cfg.ConsoleKeyFile, cfg.ConsolePort)
 	if err != nil {
-		log.Fatalw("unable to create bmcconsole", "error", err)
+		log.Fatalw("unable to create bmc console", "error", err)
 	}
 	go func() {
 		log.Fatal(console.ListenAndServe())

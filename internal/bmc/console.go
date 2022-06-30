@@ -1,4 +1,4 @@
-package bmcconsole
+package bmc
 
 import (
 	"crypto/tls"
@@ -19,14 +19,14 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
-type bmcConsole struct {
+type console struct {
 	log       *zap.SugaredLogger
 	tlsConfig *tls.Config
 	port      int
 	hostKey   gossh.Signer
 }
 
-func New(log *zap.SugaredLogger, caCertFile, certFile, keyFile string, port int) (*bmcConsole, error) {
+func NewConsole(log *zap.SugaredLogger, caCertFile, certFile, keyFile string, port int) (*console, error) {
 
 	caCert, err := os.ReadFile(caCertFile)
 	if err != nil {
@@ -52,7 +52,7 @@ func New(log *zap.SugaredLogger, caCertFile, certFile, keyFile string, port int)
 	if err != nil {
 		return nil, fmt.Errorf("cannot load host key %w", err)
 	}
-	return &bmcConsole{
+	return &console{
 		log:       log,
 		tlsConfig: tlsConfig,
 		port:      port,
@@ -61,7 +61,7 @@ func New(log *zap.SugaredLogger, caCertFile, certFile, keyFile string, port int)
 }
 
 // ListenAndServe starts ssh server and listen for console connections.
-func (c *bmcConsole) ListenAndServe() error {
+func (c *console) ListenAndServe() error {
 	s := &ssh.Server{
 		Handler: c.sessionHandler,
 	}
@@ -75,7 +75,7 @@ func (c *bmcConsole) ListenAndServe() error {
 }
 
 // FIXME broken error handling, should also be printed to the session
-func (c *bmcConsole) sessionHandler(s ssh.Session) {
+func (c *console) sessionHandler(s ssh.Session) {
 	c.log.Infow("ssh session handler called", "user", s.User(), "env", s.Environ())
 	machineID := s.User()
 	metalIPMI := c.receiveIPMIData(s)
@@ -117,7 +117,7 @@ func (c *bmcConsole) sessionHandler(s ssh.Session) {
 }
 
 // FIXME should return an error
-func (c *bmcConsole) receiveIPMIData(s ssh.Session) *models.V1MachineIPMI {
+func (c *console) receiveIPMIData(s ssh.Session) *models.V1MachineIPMI {
 	var ipmiData string
 	for i := 0; i < 5; i++ {
 		for _, env := range s.Environ() {
