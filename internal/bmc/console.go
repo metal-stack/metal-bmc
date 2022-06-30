@@ -48,10 +48,15 @@ func NewConsole(log *zap.SugaredLogger, caCertFile, certFile, keyFile string, po
 		MinVersion:   tls.VersionTLS13,
 	}
 
-	hostKey, err := loadHostKey()
+	bb, err := os.ReadFile(keyFile)
 	if err != nil {
-		return nil, fmt.Errorf("cannot load host key %w", err)
+		return nil, fmt.Errorf("failed to load ssh server key:%w", err)
 	}
+	hostKey, err := gossh.ParsePrivateKey(bb)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse ssh server key:%w", err)
+	}
+
 	return &console{
 		log:       log,
 		tlsConfig: tlsConfig,
@@ -146,12 +151,4 @@ func (c *console) receiveIPMIData(s ssh.Session) *models.V1MachineIPMI {
 	}
 
 	return metalIPMI
-}
-
-func loadHostKey() (gossh.Signer, error) {
-	bb, err := os.ReadFile("/server-key.pem")
-	if err != nil {
-		return nil, fmt.Errorf("failed to load private key:%w", err)
-	}
-	return gossh.ParsePrivateKey(bb)
 }
