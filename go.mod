@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/gliderlabs/ssh v0.3.4
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/metal-stack/go-hal a90b47a97522191a358b5b8f8d276cdd30d4b773
+	github.com/metal-stack/go-hal v0.4.3-0.20220630111016-a90b47a97522
 	github.com/metal-stack/metal-go v0.18.5
 	github.com/metal-stack/metal-lib v0.9.2
 	github.com/metal-stack/v v1.0.3
