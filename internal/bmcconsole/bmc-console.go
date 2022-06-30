@@ -37,11 +37,15 @@ func New(log *zap.SugaredLogger, caCertFile, certFile, keyFile string, port int)
 	caCertPool.AppendCertsFromPEM(caCert)
 
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		return nil, err
+	}
 
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},        // server certificate which is validated by the client
 		ClientCAs:    caCertPool,                     // used to verify the client cert is signed by the CA and is therefore valid
 		ClientAuth:   tls.RequireAndVerifyClientCert, // this requires a valid client certificate to be supplied during handshake
+		MinVersion:   tls.VersionTLS13,
 	}
 
 	ln, err := tls.Listen("tcp", fmt.Sprintf(":%d", port), tlsConfig)
