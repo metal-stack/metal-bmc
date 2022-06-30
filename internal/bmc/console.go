@@ -3,6 +3,7 @@ package bmc
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -84,7 +85,7 @@ func (c *console) ListenAndServe() error {
 
 // FIXME broken error handling, should also be printed to the session
 func (c *console) sessionHandler(s ssh.Session) {
-	c.log.Infow("ssh session handler called", "user", s.User(), "env", s.Environ())
+	c.log.Infow("ssh session handler called", "machineID", s.User())
 	machineID := s.User()
 
 	resp, err := c.client.Machine().FindIPMIMachine(machine.NewFindIPMIMachineParams().WithID(machineID), nil)
@@ -127,6 +128,10 @@ func (c *console) sessionHandler(s ssh.Session) {
 
 	err = ob.Console(s)
 	if err != nil {
-		c.log.Errorw("failed to access console", "machineID", machineID, "error", err)
+		if errors.Is(err, io.EOF) {
+			c.log.Infow("console access terminated")
+		} else {
+			c.log.Errorw("failed to access console", "machineID", machineID, "error", err)
+		}
 	}
 }
