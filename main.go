@@ -10,7 +10,7 @@ import (
 
 	"github.com/metal-stack/bmc-catcher/domain"
 	"github.com/metal-stack/bmc-catcher/internal/bmc"
-	"github.com/metal-stack/bmc-catcher/internal/bmcproxy"
+	"github.com/metal-stack/bmc-catcher/internal/bmcconsole"
 
 	"github.com/metal-stack/bmc-catcher/internal/leases"
 	"github.com/metal-stack/bmc-catcher/internal/reporter"
@@ -63,8 +63,13 @@ func main() {
 	}
 
 	// BMC Console access
-	go bmcproxy.New(log, cfg.ConsolePort).Run()
+	console, err := bmcconsole.New(log, cfg.ConsoleCACertFile, cfg.ConsoleCertFile, cfg.ConsoleKeyFile, cfg.ConsolePort)
+	if err != nil {
+		log.Fatalw("unable to create bmcconsole", "error", err)
+	}
+	go console.Run()
 
+	// Report IPMI Details
 	r, err := reporter.NewReporter(&cfg, log)
 	if err != nil {
 		log.Fatalw("could not start reporter", "error", err)
