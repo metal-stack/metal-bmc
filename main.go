@@ -10,6 +10,7 @@ import (
 
 	"github.com/metal-stack/bmc-catcher/domain"
 	"github.com/metal-stack/bmc-catcher/internal/bmc"
+	metalgo "github.com/metal-stack/metal-go"
 
 	"github.com/metal-stack/bmc-catcher/internal/leases"
 	"github.com/metal-stack/bmc-catcher/internal/reporter"
@@ -45,6 +46,11 @@ func main() {
 	log.Infow("running app version", "version", v.V.String())
 	log.Infow("configuration", "config", cfg)
 
+	client, _, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey, metalgo.AuthType("Metal-Edit"))
+	if err != nil {
+		log.Fatalw("unable to create metal-api client", "error", err)
+	}
+
 	// BMC Events via NSQ
 	b := bmc.New(bmc.Config{
 		Log:              log,
@@ -62,7 +68,7 @@ func main() {
 	}
 
 	// BMC Console access
-	console, err := bmc.NewConsole(log, cfg.ConsoleCACertFile, cfg.ConsoleCertFile, cfg.ConsoleKeyFile, cfg.ConsolePort)
+	console, err := bmc.NewConsole(log, client, cfg.ConsoleCACertFile, cfg.ConsoleCertFile, cfg.ConsoleKeyFile, cfg.ConsolePort)
 	if err != nil {
 		log.Fatalw("unable to create bmc console", "error", err)
 	}
@@ -71,7 +77,7 @@ func main() {
 	}()
 
 	// Report IPMI Details
-	r, err := reporter.NewReporter(&cfg, log)
+	r, err := reporter.NewReporter(log, &cfg, client)
 	if err != nil {
 		log.Fatalw("could not start reporter", "error", err)
 	}

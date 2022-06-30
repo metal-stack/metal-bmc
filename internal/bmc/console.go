@@ -8,13 +8,13 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/metal-stack/go-hal/connect"
 	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
+	metalgo "github.com/metal-stack/metal-go"
+	"github.com/metal-stack/metal-go/api/client/machine"
 
 	"github.com/gliderlabs/ssh"
-	"github.com/metal-stack/metal-go/api/models"
 	"go.uber.org/zap"
 	gossh "golang.org/x/crypto/ssh"
 )
@@ -24,9 +24,10 @@ type console struct {
 	tlsConfig *tls.Config
 	port      int
 	hostKey   gossh.Signer
+	client    metalgo.Client
 }
 
-func NewConsole(log *zap.SugaredLogger, caCertFile, certFile, keyFile string, port int) (*console, error) {
+func NewConsole(log *zap.SugaredLogger, client metalgo.Client, caCertFile, certFile, keyFile string, port int) (*console, error) {
 
 	caCert, err := os.ReadFile(caCertFile)
 	if err != nil {
@@ -62,6 +63,7 @@ func NewConsole(log *zap.SugaredLogger, caCertFile, certFile, keyFile string, po
 		tlsConfig: tlsConfig,
 		port:      port,
 		hostKey:   hostKey,
+		client:    client,
 	}, nil
 }
 
@@ -71,11 +73,12 @@ func (c *console) ListenAndServe() error {
 		Handler: c.sessionHandler,
 	}
 	s.AddHostKey(c.hostKey)
-	listener, err := tls.Listen("tcp", fmt.Sprintf(":%d", c.port), c.tlsConfig)
+	addr := fmt.Sprintf(":%d", c.port)
+	listener, err := tls.Listen("tcp", addr, c.tlsConfig)
 	if err != nil {
 		return fmt.Errorf("failed to create listener: %w", err)
 	}
-	c.log.Infow("starting ssh server", "address", s.Addr)
+	c.log.Infow("starting ssh server", "address", addr)
 	return s.Serve(listener)
 }
 
@@ -83,7 +86,14 @@ func (c *console) ListenAndServe() error {
 func (c *console) sessionHandler(s ssh.Session) {
 	c.log.Infow("ssh session handler called", "user", s.User(), "env", s.Environ())
 	machineID := s.User()
-	metalIPMI := c.receiveIPMIData(s)
+
+	resp, err := c.client.Machine().FindIPMIMachine(machine.NewFindIPMIMachineParams().WithID(machineID), nil)
+	if err != nil || resp.Payload == nil || resp.Payload.Ipmi == nil {
+		c.log.Errorw("failed to receive IPMI data", "machineID", machineID, "error", err)
+		return
+	}
+	metalIPMI := resp.Payload.Ipmi
+
 	c.log.Infow("connection to", "machineID", machineID)
 	if metalIPMI == nil {
 		c.log.Errorw("failed to receive IPMI data", "machineID", machineID)
@@ -93,7 +103,7 @@ func (c *console) sessionHandler(s ssh.Session) {
 		c.log.Errorw("failed to receive IPMI.Address data", "machineID", machineID)
 		return
 	}
-	_, err := io.WriteString(s, fmt.Sprintf("Connecting to console of %q (%s)\n", machineID, *metalIPMI.Address))
+	_, err = io.WriteString(s, fmt.Sprintf("Connecting to console of %q (%s)\n", machineID, *metalIPMI.Address))
 	if err != nil {
 		c.log.Warnw("failed to write to console", "machineID", machineID)
 	}
@@ -119,36 +129,4 @@ func (c *console) sessionHandler(s ssh.Session) {
 	if err != nil {
 		c.log.Errorw("failed to access console", "machineID", machineID, "error", err)
 	}
-}
-
-// FIXME should return an error
-func (c *console) receiveIPMIData(s ssh.Session) *models.V1MachineIPMI {
-	var ipmiData string
-	for i := 0; i < 5; i++ {
-		for _, env := range s.Environ() {
-			_, data, found := strings.Cut(env, "LC_IPMI_DATA=")
-			if found {
-				ipmiData = data
-				break
-			}
-		}
-		if len(ipmiData) > 0 {
-			break
-		}
-		time.Sleep(1 * time.Second)
-	}
-
-	if len(ipmiData) == 0 {
-		c.log.Error("failed to receive IPMI data")
-		return nil
-	}
-
-	metalIPMI := &models.V1MachineIPMI{}
-	err := metalIPMI.UnmarshalBinary([]byte(ipmiData))
-	if err != nil {
-		c.log.Errorw("failed to unmarshal received IPMI data", "error", err)
-		return nil
-	}
-
-	return metalIPMI
 }

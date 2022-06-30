@@ -4,6 +4,7 @@ import (
 	"github.com/metal-stack/bmc-catcher/domain"
 	"github.com/metal-stack/bmc-catcher/internal/leases"
 	metalgo "github.com/metal-stack/metal-go"
+	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
 	"go.uber.org/zap"
 )
@@ -12,19 +13,15 @@ import (
 type Reporter struct {
 	cfg    *domain.Config
 	Log    *zap.SugaredLogger
-	driver *metalgo.Driver
+	client metalgo.Client
 }
 
 // NewReporter will create a reporter for MachineIpmiReports
-func NewReporter(cfg *domain.Config, log *zap.SugaredLogger) (*Reporter, error) {
-	_, driver, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey, metalgo.AuthType("Metal-Edit"))
-	if err != nil {
-		return nil, err
-	}
+func NewReporter(log *zap.SugaredLogger, cfg *domain.Config, client metalgo.Client) (*Reporter, error) {
 	return &Reporter{
 		cfg:    cfg,
 		Log:    log,
-		driver: driver,
+		client: client,
 	}, nil
 }
 
@@ -57,23 +54,21 @@ func (r Reporter) Report(items []*leases.ReportItem) error {
 		reports[*item.UUID] = report
 	}
 
-	mir := metalgo.MachineIPMIReports{
-		Reports: &models.V1MachineIpmiReports{
-			Partitionid: partitionID,
-			Reports:     reports,
-		},
+	mir := &models.V1MachineIpmiReports{
+		Partitionid: partitionID,
+		Reports:     reports,
 	}
 
-	ok, err := r.driver.MachineIPMIReport(mir)
+	ok, err := r.client.Machine().IpmiReport(machine.NewIpmiReportParams().WithBody(mir), nil)
 	if err != nil {
 		return err
 	}
 
-	r.Log.Infof("updated ipmi information of %d machines", len(ok.Response.Updated))
-	for _, u := range ok.Response.Updated {
+	r.Log.Infof("updated ipmi information of %d machines", len(ok.Payload.Updated))
+	for _, u := range ok.Payload.Updated {
 		r.Log.Infow("ipmi information was updated for machine", "uuid", u)
 	}
-	for _, u := range ok.Response.Created {
+	for _, u := range ok.Payload.Created {
 		r.Log.Infow("ipmi information was set and machine was created", "uuid", u)
 	}
 
