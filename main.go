@@ -2,15 +2,11 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
-	"sync"
-	"syscall"
-	"time"
 
 	"github.com/metal-stack/bmc-catcher/domain"
 	"github.com/metal-stack/bmc-catcher/internal/bmc"
-	"github.com/metal-stack/bmc-catcher/internal/leases"
+	metalgo "github.com/metal-stack/metal-go"
+
 	"github.com/metal-stack/bmc-catcher/internal/reporter"
 	"github.com/metal-stack/v"
 
@@ -44,6 +40,12 @@ func main() {
 	log.Infow("running app version", "version", v.V.String())
 	log.Infow("configuration", "config", cfg)
 
+	client, _, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey, metalgo.AuthType("Metal-Edit"))
+	if err != nil {
+		log.Fatalw("unable to create metal-api client", "error", err)
+	}
+
+	// BMC Events via NSQ
 	b := bmc.New(bmc.Config{
 		Log:              log,
 		MQAddress:        cfg.MQAddress,
@@ -56,54 +58,23 @@ func main() {
 
 	err = b.InitConsumer()
 	if err != nil {
-		log.Fatalw("unable to create bmcservice", "error", err)
+		log.Fatalw("unable to create bmc service", "error", err)
 	}
 
-	r, err := reporter.NewReporter(&cfg, log)
+	// BMC Console access
+	console, err := bmc.NewConsole(log, client, cfg.ConsoleCACertFile, cfg.ConsoleCertFile, cfg.ConsoleKeyFile, cfg.ConsolePort)
+	if err != nil {
+		log.Fatalw("unable to create bmc console", "error", err)
+	}
+	go func() {
+		log.Fatal(console.ListenAndServe())
+	}()
+
+	// Report IPMI Details
+	r, err := reporter.New(log, &cfg, client)
 	if err != nil {
 		log.Fatalw("could not start reporter", "error", err)
 	}
 
-	periodic := time.NewTicker(cfg.ReportInterval)
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
-
-	for {
-		select {
-		case <-periodic.C:
-			ls, err := leases.ReadLeases(cfg.LeaseFile)
-			if err != nil {
-				log.Fatalw("could not parse leases file", "error", err)
-			}
-			active := ls.FilterActive()
-			byMac := active.LatestByMac()
-			log.Infow("reporting leases to metal-api", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
-
-			mtx := new(sync.Mutex)
-			var items []*leases.ReportItem
-
-			wg := new(sync.WaitGroup)
-			wg.Add(len(byMac))
-
-			for _, l := range byMac {
-				item := leases.NewReportItem(l, log)
-				go func() {
-					item.EnrichWithBMCDetails(cfg.IpmiPort, cfg.IpmiUser, cfg.IpmiPassword)
-					mtx.Lock()
-					items = append(items, item)
-					wg.Done()
-					mtx.Unlock()
-				}()
-			}
-
-			wg.Wait()
-
-			err = r.Report(items)
-			if err != nil {
-				log.Warnw("could not report ipmi addresses", "error", err)
-			}
-		case <-signals:
-			return
-		}
-	}
+	r.Run()
 }

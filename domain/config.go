@@ -7,8 +7,10 @@ import (
 
 type Config struct {
 	// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL and PANIC
-	LogLevel        string        `required:"false" default:"debug" desc:"set log level" split_words:"true"`
-	PartitionID     string        `required:"true" desc:"set the partition ID" envconfig:"partition_id"`
+	LogLevel    string `required:"false" default:"debug" desc:"set log level" split_words:"true"`
+	PartitionID string `required:"true" desc:"set the partition ID" envconfig:"partition_id"`
+
+	// ipmi details reporting parameters
 	LeaseFile       string        `required:"false" default:"/var/lib/dhcp/dhcpd.leases" desc:"the dhcp lease file to read" split_words:"true"`
 	ReportInterval  time.Duration `required:"false" default:"5m" desc:"the interval for periodical reports" split_words:"true"`
 	MetalAPIURL     *url.URL      `required:"true" desc:"endpoint for the metal-api" envconfig:"metal_api_url"`
@@ -18,10 +20,17 @@ type Config struct {
 	IpmiPassword    string        `required:"false" default:"ADMIN" desc:"the ipmi password" split_words:"true"`
 	IgnoreMacs      []string      `required:"false" desc:"mac addresses to ignore" split_words:"true"`
 
+	// NSQ connection parameters
 	MQAddress        string        `required:"false" default:"localhost:4161" desc:"set the MQ server address" envconfig:"mq_address"`
 	MQCACertFile     string        `required:"false" default:"" desc:"the CA certificate file for verifying MQ certificate" envconfig:"mq_ca_cert_file"`
 	MQClientCertFile string        `required:"false" default:"" desc:"the client certificate file for accessing MQ" envconfig:"mq_client_cert_file"`
 	MQLogLevel       string        `required:"false" default:"warn" desc:"sets the MQ loglevel (debug, info, warn, error)" envconfig:"mq_loglevel"`
 	MachineTopic     string        `required:"false" default:"machine" desc:"set the machine topic name" split_words:"true"`
 	MachineTopicTTL  time.Duration `required:"false" default:"30s" desc:"sets the TTL for MachineTopic" envconfig:"machine_topic_ttl"`
+
+	// Console Proxy parameters
+	ConsolePort       int    `required:"false" default:"3333" desc:"defines the port where to listen for incoming console connections from metal-console" envconfig:"console_port"`
+	ConsoleCACertFile string `required:"false" default:"ca.pem" desc:"ca cert file" envconfig:"console_ca_cert_file"`
+	ConsoleCertFile   string `required:"false" default:"cert.pem" desc:"cert file" envconfig:"console_cert_file"`
+	ConsoleKeyFile    string `required:"false" default:"key.pem" desc:"key file" envconfig:"console_key_file"`
 }
