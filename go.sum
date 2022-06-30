@@ -244,8 +244,8 @@ github.com/mailru/easyjson v0.7.7 h1:UGYAvKxe3sBsEDzO8ZeWOSlIQfWFlxbzLZe7hwFURr0
 github.com/mailru/easyjson v0.7.7/go.mod h1:xzfreul335JAWq5oZzymOObrkdz5UnU4kGfJJLY9Nlc=
 github.com/markbates/oncer v0.0.0-20181203154359-bf2de49a0be2/go.mod h1:Ld9puTsIW75CHf65OeIOkyKbteujpZVXDpWK6YGZbxE=
 github.com/markbates/safe v1.0.1/go.mod h1:nAqgmRi7cY2nqMc92/bSEeQA+R4OheNU2T1kNSCBdG0=
-github.com/metal-stack/go-hal v0.4.2 h1:aI6TM+/NNB0TP/Brhq3qW5dMbdUTsp+xX8q972URS8k=
-github.com/metal-stack/go-hal v0.4.2/go.mod h1:ZRUC95g3D4hQT9g+HX/z/LcyZ5opLRq0ykWUz9OMknU=
+github.com/metal-stack/go-hal v0.4.3-0.20220630104209-2e26a3040798 h1:RygwzXpf1Z1+UaaIKeIwzeeaT19hENL66k0ZxOcBMtA=
+github.com/metal-stack/go-hal v0.4.3-0.20220630104209-2e26a3040798/go.mod h1:ZRUC95g3D4hQT9g+HX/z/LcyZ5opLRq0ykWUz9OMknU=
 github.com/metal-stack/masterdata-api v0.8.12 h1:hfg+g0W1tzs/5mV9RG4+l6pAtH/SMaeEUQujx+50Z7U=
 github.com/metal-stack/masterdata-api v0.8.12/go.mod h1:le/cvZ9nvw9QQ/eVJSrO7rNdwMMuIrQxFalaIcv/GUg=
 github.com/metal-stack/metal-go v0.18.5 h1:ySdF2S/bb+C1qdc2nmEgpRYJEDBN0OaE8DHrM+nthbs=
