@@ -1,4 +1,4 @@
-module github.com/metal-stack/bmc-catcher
+module github.com/metal-stack/metal-bmc
 
 go 1.18
 
