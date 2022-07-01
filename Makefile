@@ -1,20 +1,24 @@
-BINARY := bmc-catcher
-MAINMODULE := github.com/metal-stack/bmc-catcher
-COMMONDIR := $(or ${COMMONDIR},../builder)
-DOCKER_TAG := $(or ${GITHUB_TAG_NAME}, latest)
+.ONESHELL:
+SHA := $(shell git rev-parse --short=8 HEAD)
+GITVERSION := $(shell git describe --long --all)
+BUILDDATE := $(shell date -Iseconds)
+VERSION := $(or ${VERSION},devel)
 
-include $(COMMONDIR)/Makefile.inc
+all: test metal-bmc
 
-release:: test all;
+.PHONY: test
+test:
+	go test -v ./...
 
-.PHONY: fmt
-fmt:
-	GO111MODULE=off go fmt ./...
-
-.PHONY: dockerimage
-dockerimage:
-	docker build -t metalstack/bmc-catcher:${DOCKER_TAG} .
-
-.PHONY: dockerpush
-dockerpush:
-	docker push metalstack/bmc-catcher:${DOCKER_TAG}
+.PHONY: metal-bmc
+metal-bmc:
+	go build \
+		-trimpath \
+		-tags netgo \
+		-ldflags "-X 'github.com/metal-stack/v.Version=$(VERSION)' \
+				  -X 'github.com/metal-stack/v.Revision=$(GITVERSION)' \
+				  -X 'github.com/metal-stack/v.GitSHA1=$(SHA)' \
+				  -X 'github.com/metal-stack/v.BuildDate=$(BUILDDATE)'" \
+		-o bin/metal-bmc \
+		main.go
+	strip bin/metal-bmc

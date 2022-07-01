@@ -7,8 +7,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/metal-stack/bmc-catcher/domain"
-	"github.com/metal-stack/bmc-catcher/internal/leases"
+	"github.com/metal-stack/metal-bmc/domain"
+	"github.com/metal-stack/metal-bmc/internal/leases"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"

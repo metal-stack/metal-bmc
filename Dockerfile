@@ -1,4 +1,7 @@
-FROM metalstack/builder:latest as builder
+FROM golang:1.18 as builder
+WORKDIR /work
+COPY . .
+RUN make
 
 FROM r.metal-stack.io/metal/supermicro:2.8.1 as sum
 
@@ -12,7 +15,7 @@ RUN apt update \
  # /usr/bin/sum is provided by busybox
  && rm /usr/bin/sum
 
-COPY --from=builder /work/bin/bmc-catcher /
+COPY --from=builder /work/bin/metal-bmc /
 COPY --from=sum /usr/bin/sum /usr/bin/sum
 
-CMD ["/bmc-catcher"]
+CMD ["/metal-bmc"]

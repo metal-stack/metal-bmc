@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 
-	"github.com/metal-stack/bmc-catcher/domain"
-	"github.com/metal-stack/bmc-catcher/internal/bmc"
+	"github.com/metal-stack/metal-bmc/domain"
+	"github.com/metal-stack/metal-bmc/internal/bmc"
 	metalgo "github.com/metal-stack/metal-go"
 
-	"github.com/metal-stack/bmc-catcher/internal/reporter"
+	"github.com/metal-stack/metal-bmc/internal/reporter"
 	"github.com/metal-stack/v"
 
 	"github.com/kelseyhightower/envconfig"
