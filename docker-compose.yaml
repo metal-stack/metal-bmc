@@ -10,9 +10,9 @@ services:
     volumes:
       - ${PWD}/dhcpd.leases:/dhcpd.leases
     environment:
-      BMC_CATCHER_LEASE_FILE: /dhcpd.leases
-      BMC_CATCHER_PARTITION_ID: partition
-      BMC_CATCHER_METAL_API_URL: http://localhost:8080
-      BMC_CATCHER_METAL_API_HMAC_KEY: test
-      BMC_CATCHER_IGNORE_MACS: "aa:aa:aa:aa:aa:aa"
+      METAL_BMC_LEASE_FILE: /dhcpd.leases
+      METAL_BMC_PARTITION_ID: partition
+      METAL_BMC_METAL_API_URL: http://localhost:8080
+      METAL_BMC_METAL_API_HMAC_KEY: test
+      METAL_BMC_IGNORE_MACS: "aa:aa:aa:aa:aa:aa"
 

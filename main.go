@@ -17,7 +17,7 @@ import (
 
 func main() {
 	var cfg domain.Config
-	if err := envconfig.Process("BMC_CATCHER", &cfg); err != nil {
+	if err := envconfig.Process("METAL_BMC", &cfg); err != nil {
 		panic(fmt.Errorf("bad configuration: %w", err))
 	}
 
