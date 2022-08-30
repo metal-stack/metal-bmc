@@ -64,7 +64,7 @@ func (b *BMCService) InitConsumer() error {
 				if err != nil {
 					return err
 				}
-				return outBand.PowerCycle()
+				return outBand.PowerReset()
 			case Command:
 				switch event.Cmd.Command {
 				case MachineOnCmd:
