@@ -86,7 +86,7 @@ func (b *BMCService) InitConsumer() error {
 					if err != nil {
 						return err
 					}
-					return outBand.PowerReset()
+					return outBand.PowerCycle()
 				case ChassisIdentifyLEDOnCmd:
 					return outBand.IdentifyLEDOn()
 				case ChassisIdentifyLEDOffCmd:
