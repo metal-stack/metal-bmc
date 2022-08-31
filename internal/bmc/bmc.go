@@ -9,6 +9,7 @@ import (
 	"github.com/metal-stack/go-hal"
 	"github.com/metal-stack/go-hal/connect"
 	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
+	"github.com/metal-stack/metal-lib/pkg/tag"
 
 	"go.uber.org/zap"
 )
@@ -54,10 +55,10 @@ type MachineEvent struct {
 }
 
 type MachineExecCommand struct {
-	TargetMachineID string          `json:"target,omitempty"`
-	Command         MachineCommand  `json:"cmd,omitempty"`
-	IPMI            *IPMI           `json:"ipmi,omitempty"`
-	FirmwareUpdate  *FirmwareUpdate `json:"firmwareupdate,omitempty"`
+	TargetMachineID string             `json:"target,omitempty"`
+	Command         tag.MachineCommand `json:"cmd,omitempty"`
+	IPMI            *IPMI              `json:"ipmi,omitempty"`
+	FirmwareUpdate  *FirmwareUpdate    `json:"firmwareupdate,omitempty"`
 }
 
 type IPMI struct {
@@ -80,19 +81,7 @@ type Fru struct {
 type MachineCommand string
 
 // FIXME these constants must move to a single location
-const (
-	MachineOnCmd             MachineCommand = "ON"
-	MachineOffCmd            MachineCommand = "OFF"
-	MachineResetCmd          MachineCommand = "RESET"
-	MachineCycleCmd          MachineCommand = "CYCLE"
-	MachineBiosCmd           MachineCommand = "BIOS"
-	MachineDiskCmd           MachineCommand = "DISK"
-	MachinePxeCmd            MachineCommand = "PXE"
-	MachineReinstallCmd      MachineCommand = "REINSTALL"
-	ChassisIdentifyLEDOnCmd  MachineCommand = "LED-ON"
-	ChassisIdentifyLEDOffCmd MachineCommand = "LED-OFF"
-	UpdateFirmwareCmd        MachineCommand = "UPDATE-FIRMWARE"
-)
+const ()
 
 type EventType string
 

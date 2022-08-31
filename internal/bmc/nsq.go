@@ -8,6 +8,7 @@ import (
 	"github.com/metal-stack/go-hal"
 
 	"github.com/metal-stack/metal-lib/bus"
+	"github.com/metal-stack/metal-lib/pkg/tag"
 )
 
 // timeout for the nsq handler methods
@@ -67,31 +68,31 @@ func (b *BMCService) InitConsumer() error {
 				return outBand.PowerReset()
 			case Command:
 				switch event.Cmd.Command {
-				case MachineOnCmd:
+				case tag.MachineOnCmd:
 					return outBand.PowerOn()
-				case MachineOffCmd:
+				case tag.MachineOffCmd:
 					return outBand.PowerOff()
-				case MachineResetCmd:
+				case tag.MachineResetCmd:
 					return outBand.PowerReset()
-				case MachineCycleCmd:
+				case tag.MachineCycleCmd:
 					return outBand.PowerCycle()
-				case MachineBiosCmd:
+				case tag.MachineBiosCmd:
 					return outBand.BootFrom(hal.BootTargetBIOS)
-				case MachineDiskCmd:
+				case tag.MachineDiskCmd:
 					return outBand.BootFrom(hal.BootTargetDisk)
-				case MachinePxeCmd:
+				case tag.MachinePxeCmd:
 					return outBand.BootFrom(hal.BootTargetPXE)
-				case MachineReinstallCmd:
+				case tag.MachineReinstallCmd:
 					err := outBand.BootFrom(hal.BootTargetPXE)
 					if err != nil {
 						return err
 					}
 					return outBand.PowerCycle()
-				case ChassisIdentifyLEDOnCmd:
+				case tag.ChassisIdentifyLEDOnCmd:
 					return outBand.IdentifyLEDOn()
-				case ChassisIdentifyLEDOffCmd:
+				case tag.ChassisIdentifyLEDOffCmd:
 					return outBand.IdentifyLEDOff()
-				case UpdateFirmwareCmd:
+				case tag.UpdateFirmwareCmd:
 					return b.UpdateFirmware(outBand, event)
 				default:
 					b.log.Errorw("unhandled command", "topic", b.machineTopic, "channel", "core", "event", event)
