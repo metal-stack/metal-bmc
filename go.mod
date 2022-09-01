@@ -7,7 +7,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-hal v0.4.2
 	github.com/metal-stack/metal-go v0.19.2
-	github.com/metal-stack/metal-lib v0.11.1-0.20220831145911-8552290f94dd
+	github.com/metal-stack/metal-lib v0.11.1-0.20220901054104-d22b2ea3af3e
 	github.com/metal-stack/v v1.0.3
 	github.com/stretchr/testify v1.8.0
 	go.uber.org/zap v1.23.0

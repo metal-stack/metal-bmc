@@ -60,13 +60,13 @@ func (b *BMCService) InitConsumer() error {
 			}
 
 			switch event.Type {
-			case Delete:
+			case tag.MachineEventDelete:
 				err := outBand.BootFrom(hal.BootTargetPXE)
 				if err != nil {
 					return err
 				}
 				return outBand.PowerReset()
-			case Command:
+			case tag.MachineEventCommand:
 				switch event.Cmd.Command {
 				case tag.MachineOnCmd:
 					return outBand.PowerOn()
@@ -97,7 +97,7 @@ func (b *BMCService) InitConsumer() error {
 				default:
 					b.log.Errorw("unhandled command", "topic", b.machineTopic, "channel", "core", "event", event)
 				}
-			case Create, Update:
+			case tag.MachineEventCreate, tag.MachineEventUpdate:
 				fallthrough
 			default:
 				b.log.Warnw("unhandled event", "topic", b.machineTopic, "channel", "core", "event", event)

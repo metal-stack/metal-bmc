@@ -49,9 +49,8 @@ func New(c Config) *BMCService {
 }
 
 type MachineEvent struct {
-	Type         EventType           `json:"type,omitempty"`
-	OldMachineID string              `json:"old,omitempty"`
-	Cmd          *MachineExecCommand `json:"cmd,omitempty"`
+	Type tag.MachineEventType `json:"type,omitempty"`
+	Cmd  *MachineExecCommand  `json:"cmd,omitempty"`
 }
 
 type MachineExecCommand struct {
@@ -77,21 +76,6 @@ type FirmwareUpdate struct {
 type Fru struct {
 	BoardPartNumber string `json:"board_part_number"`
 }
-
-type MachineCommand string
-
-// FIXME these constants must move to a single location
-const ()
-
-type EventType string
-
-// FIXME these constants must move to a single location
-const (
-	Create  EventType = "create"
-	Update  EventType = "update"
-	Delete  EventType = "delete"
-	Command EventType = "command"
-)
 
 func (b *BMCService) outBand(ipmi *IPMI) (hal.OutBand, error) {
 	host, portString, found := strings.Cut(ipmi.Address, ":")
