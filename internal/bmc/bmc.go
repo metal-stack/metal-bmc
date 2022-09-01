@@ -48,11 +48,13 @@ func New(c Config) *BMCService {
 	return b
 }
 
+// FIXME these structs are duplicates of metal-api ones
 type MachineEvent struct {
 	Type tag.MachineEventType `json:"type,omitempty"`
 	Cmd  *MachineExecCommand  `json:"cmd,omitempty"`
 }
 
+// FIXME these structs are duplicates of metal-api ones
 type MachineExecCommand struct {
 	TargetMachineID string             `json:"target,omitempty"`
 	Command         tag.MachineCommand `json:"cmd,omitempty"`
@@ -60,6 +62,7 @@ type MachineExecCommand struct {
 	FirmwareUpdate  *FirmwareUpdate    `json:"firmwareupdate,omitempty"`
 }
 
+// FIXME these structs are duplicates of metal-api ones
 type IPMI struct {
 	// Address is host:port of the connection to the ipmi BMC, host can be either a ip address or a hostname
 	Address  string `json:"address"`
@@ -68,6 +71,7 @@ type IPMI struct {
 	Fru      Fru    `json:"fru"`
 }
 
+// FIXME these structs are duplicates of metal-api ones
 type FirmwareUpdate struct {
 	Kind string `json:"kind"`
 	URL  string `json:"url"`
