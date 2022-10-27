@@ -40,7 +40,7 @@ func main() {
 	log.Infow("running app version", "version", v.V.String())
 	log.Infow("configuration", "config", cfg)
 
-	client, _, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey, metalgo.AuthType("Metal-Edit"))
+	client, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey, metalgo.AuthType("Metal-Edit"))
 	if err != nil {
 		log.Fatalw("unable to create metal-api client", "error", err)
 	}
