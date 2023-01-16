@@ -6,7 +6,7 @@ require (
 	github.com/gliderlabs/ssh v0.3.5
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-hal v0.4.3
-	github.com/metal-stack/metal-go v0.21.5-0.20230116100134-4569877353b7
+	github.com/metal-stack/metal-go v0.21.5
 	github.com/metal-stack/metal-lib v0.11.2
 	github.com/metal-stack/v v1.0.3
 	github.com/stretchr/testify v1.8.1
