@@ -15,7 +15,7 @@ func (b *BMCService) UpdateFirmware(outBand hal.OutBand, event *MachineEvent) er
 
 	fw := event.Cmd.FirmwareUpdate
 	switch fw.Kind {
-	case string(models.V1MachineUpdateFirmwareRequestKindBios):
+	case models.V1MachineUpdateFirmwareRequestKindBios:
 		b.log.Infow("update firmware bios", "download url", fw.URL)
 		go func() {
 			err := outBand.UpdateBIOS(fw.URL)
@@ -23,7 +23,7 @@ func (b *BMCService) UpdateFirmware(outBand hal.OutBand, event *MachineEvent) er
 				b.log.Errorw("updatebios", "error", err)
 			}
 		}()
-	case string(models.V1MachineUpdateFirmwareRequestKindBmc):
+	case models.V1MachineUpdateFirmwareRequestKindBmc:
 		b.log.Infow("update firmware bmc", "download url", fw.URL)
 		go func() {
 			err := outBand.UpdateBMC(fw.URL)

@@ -7,7 +7,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-hal v0.4.3
 	github.com/metal-stack/metal-go v0.21.5
-	github.com/metal-stack/metal-lib v0.11.2
+	github.com/metal-stack/metal-lib v0.11.3-0.20221027084003-85902ea85904
 	github.com/metal-stack/v v1.0.3
 	github.com/stretchr/testify v1.8.1
 	go.uber.org/zap v1.24.0
@@ -60,8 +60,8 @@ require (
 	github.com/stmcginnis/gofish v0.13.0 // indirect
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702 // indirect
 	go.mongodb.org/mongo-driver v1.11.1 // indirect
-	go.opentelemetry.io/otel v1.11.1 // indirect
-	go.opentelemetry.io/otel/trace v1.11.1 // indirect
+	go.opentelemetry.io/otel v1.11.2 // indirect
+	go.opentelemetry.io/otel/trace v1.11.2 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/net v0.5.0 // indirect

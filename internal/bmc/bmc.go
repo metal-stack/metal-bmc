@@ -9,6 +9,7 @@ import (
 	"github.com/metal-stack/go-hal"
 	"github.com/metal-stack/go-hal/connect"
 	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
+	"github.com/metal-stack/metal-lib/pkg/tag"
 
 	"go.uber.org/zap"
 )
@@ -47,19 +48,21 @@ func New(c Config) *BMCService {
 	return b
 }
 
+// FIXME these structs are duplicates of metal-api ones
 type MachineEvent struct {
-	Type         EventType           `json:"type,omitempty"`
-	OldMachineID string              `json:"old,omitempty"`
-	Cmd          *MachineExecCommand `json:"cmd,omitempty"`
+	Type tag.MachineEventType `json:"type,omitempty"`
+	Cmd  *MachineExecCommand  `json:"cmd,omitempty"`
 }
 
+// FIXME these structs are duplicates of metal-api ones
 type MachineExecCommand struct {
-	TargetMachineID string          `json:"target,omitempty"`
-	Command         MachineCommand  `json:"cmd,omitempty"`
-	IPMI            *IPMI           `json:"ipmi,omitempty"`
-	FirmwareUpdate  *FirmwareUpdate `json:"firmwareupdate,omitempty"`
+	TargetMachineID string             `json:"target,omitempty"`
+	Command         tag.MachineCommand `json:"cmd,omitempty"`
+	IPMI            *IPMI              `json:"ipmi,omitempty"`
+	FirmwareUpdate  *FirmwareUpdate    `json:"firmwareupdate,omitempty"`
 }
 
+// FIXME these structs are duplicates of metal-api ones
 type IPMI struct {
 	// Address is host:port of the connection to the ipmi BMC, host can be either a ip address or a hostname
 	Address  string `json:"address"`
@@ -68,6 +71,7 @@ type IPMI struct {
 	Fru      Fru    `json:"fru"`
 }
 
+// FIXME these structs are duplicates of metal-api ones
 type FirmwareUpdate struct {
 	Kind string `json:"kind"`
 	URL  string `json:"url"`
@@ -76,33 +80,6 @@ type FirmwareUpdate struct {
 type Fru struct {
 	BoardPartNumber string `json:"board_part_number"`
 }
-
-type MachineCommand string
-
-// FIXME these constants must move to a single location
-const (
-	MachineOnCmd             MachineCommand = "ON"
-	MachineOffCmd            MachineCommand = "OFF"
-	MachineResetCmd          MachineCommand = "RESET"
-	MachineCycleCmd          MachineCommand = "CYCLE"
-	MachineBiosCmd           MachineCommand = "BIOS"
-	MachineDiskCmd           MachineCommand = "DISK"
-	MachinePxeCmd            MachineCommand = "PXE"
-	MachineReinstallCmd      MachineCommand = "REINSTALL"
-	ChassisIdentifyLEDOnCmd  MachineCommand = "LED-ON"
-	ChassisIdentifyLEDOffCmd MachineCommand = "LED-OFF"
-	UpdateFirmwareCmd        MachineCommand = "UPDATE-FIRMWARE"
-)
-
-type EventType string
-
-// FIXME these constants must move to a single location
-const (
-	Create  EventType = "create"
-	Update  EventType = "update"
-	Delete  EventType = "delete"
-	Command EventType = "command"
-)
 
 func (b *BMCService) outBand(ipmi *IPMI) (hal.OutBand, error) {
 	host, portString, found := strings.Cut(ipmi.Address, ":")
