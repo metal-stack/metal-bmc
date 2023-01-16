@@ -25,6 +25,7 @@ type ReportItem struct {
 	FRU          *models.V1MachineFru
 	Powerstate   *string
 	IndicatorLED *string
+	PowerMetric  *models.V1PowerMetric
 }
 
 func NewReportItem(l Lease, log *zap.SugaredLogger) *ReportItem {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/metal-stack/go-hal"
-	metalgo "github.com/metal-stack/metal-go"
+	"github.com/metal-stack/metal-go/api/models"
 )
 
 func (b *BMCService) UpdateFirmware(outBand hal.OutBand, event *MachineEvent) error {
@@ -15,7 +15,7 @@ func (b *BMCService) UpdateFirmware(outBand hal.OutBand, event *MachineEvent) er
 
 	fw := event.Cmd.FirmwareUpdate
 	switch fw.Kind {
-	case string(metalgo.Bios):
+	case string(models.V1MachineUpdateFirmwareRequestKindBios):
 		b.log.Infow("update firmware bios", "download url", fw.URL)
 		go func() {
 			err := outBand.UpdateBIOS(fw.URL)
@@ -23,7 +23,7 @@ func (b *BMCService) UpdateFirmware(outBand hal.OutBand, event *MachineEvent) er
 				b.log.Errorw("updatebios", "error", err)
 			}
 		}()
-	case string(metalgo.Bmc):
+	case string(models.V1MachineUpdateFirmwareRequestKindBmc):
 		b.log.Infow("update firmware bmc", "download url", fw.URL)
 		go func() {
 			err := outBand.UpdateBMC(fw.URL)
