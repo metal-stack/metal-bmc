@@ -1,9 +1,9 @@
-FROM golang:1.19 as builder
+FROM golang:1.20 as builder
 WORKDIR /work
 COPY . .
 RUN make
 
-FROM r.metal-stack.io/metal/supermicro:2.8.1 as sum
+FROM r.metal-stack.io/metal/supermicro:2.10.0 as sum
 
 FROM debian:11-slim
 
