@@ -3,9 +3,9 @@ WORKDIR /work
 COPY . .
 RUN make
 
-FROM r.metal-stack.io/metal/supermicro:2.10.0 as sum
+FROM r.metal-stack.io/metal/supermicro:2.11.0 as sum
 
-FROM debian:11-slim
+FROM debian:12-slim
 
 RUN apt update \
  && apt install --yes --no-install-recommends \
