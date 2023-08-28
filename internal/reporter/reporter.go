@@ -82,6 +82,7 @@ func (r reporter) report(items []*leases.ReportItem) error {
 	reports := make(map[string]models.V1MachineIpmiReport)
 
 	for _, item := range items {
+		item := item
 		mac := item.Mac
 
 		if item.MacContainedIn(r.cfg.IgnoreMacs) {
