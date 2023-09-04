@@ -1,6 +1,7 @@
-package domain
+package config
 
 import (
+	"net/netip"
 	"net/url"
 	"time"
 )
@@ -19,6 +20,7 @@ type Config struct {
 	IpmiUser        string        `required:"false" default:"ADMIN" desc:"the ipmi user" split_words:"true"`
 	IpmiPassword    string        `required:"false" default:"ADMIN" desc:"the ipmi password" split_words:"true"`
 	IgnoreMacs      []string      `required:"false" desc:"mac addresses to ignore" split_words:"true"`
+	AllowedCidrs    []string      `required:"false" desc:"filters dhcp leases" split_words:"true"`
 
 	// NSQ connection parameters
 	MQAddress        string        `required:"false" default:"localhost:4161" desc:"set the MQ server address" envconfig:"mq_address"`
@@ -33,4 +35,15 @@ type Config struct {
 	ConsoleCACertFile string `required:"false" default:"ca.pem" desc:"ca cert file" envconfig:"console_ca_cert_file"`
 	ConsoleCertFile   string `required:"false" default:"cert.pem" desc:"cert file" envconfig:"console_cert_file"`
 	ConsoleKeyFile    string `required:"false" default:"key.pem" desc:"key file" envconfig:"console_key_file"`
+}
+
+func (c *Config) Validate() error {
+	for _, cidr := range c.AllowedCidrs {
+		cidr := cidr
+		_, err := netip.ParsePrefix(cidr)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

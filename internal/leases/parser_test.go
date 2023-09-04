@@ -34,7 +34,7 @@ lease 192.168.2.30 {
 
 func TestParse(t *testing.T) {
 	assert := assert.New(t)
-	l, err := Parse(LEASES_CONTENT)
+	l, err := parse(LEASES_CONTENT)
 	assert.NoError(err)
 
 	b, _ := time.Parse(DATE_FORMAT, "2019/06/27 13:30:21")

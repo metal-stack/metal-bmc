@@ -1,14 +1,16 @@
 package reporter
 
 import (
+	"net/netip"
 	"os"
 	"os/signal"
+	"slices"
 	"sync"
 	"syscall"
 	"time"
 
-	"github.com/metal-stack/metal-bmc/domain"
 	"github.com/metal-stack/metal-bmc/internal/leases"
+	"github.com/metal-stack/metal-bmc/pkg/config"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
@@ -17,13 +19,13 @@ import (
 
 // reporter reports information about bmc, bios and dhcp ip of bmc to metal-api
 type reporter struct {
-	cfg    *domain.Config
+	cfg    *config.Config
 	log    *zap.SugaredLogger
 	client metalgo.Client
 }
 
 // New will create a reporter for MachineIpmiReports
-func New(log *zap.SugaredLogger, cfg *domain.Config, client metalgo.Client) (*reporter, error) {
+func New(log *zap.SugaredLogger, cfg *config.Config, client metalgo.Client) (*reporter, error) {
 	return &reporter{
 		cfg:    cfg,
 		log:    log,
@@ -41,7 +43,11 @@ func (r reporter) Run() {
 		case <-periodic.C:
 			ls, err := leases.ReadLeases(r.cfg.LeaseFile)
 			if err != nil {
-				r.log.Fatalw("could not parse leases file", "error", err)
+				r.log.Errorw("could not parse leases file", "error", err)
+			}
+			if len(ls) == 0 {
+				r.log.Errorw("empty leases returned, nothing to report")
+				continue
 			}
 			active := ls.FilterActive()
 			byMac := active.LatestByMac()
@@ -54,6 +60,14 @@ func (r reporter) Run() {
 			wg.Add(len(byMac))
 
 			for _, l := range byMac {
+				if !r.isInAllowedCidr(l.Ip) {
+					continue
+				}
+
+				if slices.Contains(r.cfg.IgnoreMacs, l.Mac) {
+					continue
+				}
+
 				item := leases.NewReportItem(l, r.log)
 				go func() {
 					item.EnrichWithBMCDetails(r.cfg.IpmiPort, r.cfg.IpmiUser, r.cfg.IpmiPassword)
@@ -76,6 +90,25 @@ func (r reporter) Run() {
 	}
 }
 
+func (r reporter) isInAllowedCidr(ip string) bool {
+	parsedIP, err := netip.ParseAddr(ip)
+	if err != nil {
+		r.log.Errorw("given ip is not parsable", "ip", ip, "error", err)
+		return false
+	}
+	for _, cidr := range r.cfg.AllowedCidrs {
+		cidr := cidr
+		pfx, err := netip.ParsePrefix(cidr)
+		if err != nil {
+			return false
+		}
+		if pfx.Contains(parsedIP) {
+			return true
+		}
+	}
+	return false
+}
+
 // report will send all gathered information about machines to the metal-api
 func (r reporter) report(items []*leases.ReportItem) error {
 	partitionID := r.cfg.PartitionID
@@ -83,15 +116,8 @@ func (r reporter) report(items []*leases.ReportItem) error {
 
 	for _, item := range items {
 		item := item
-		mac := item.Mac
-
-		if item.MacContainedIn(r.cfg.IgnoreMacs) {
-			continue
-		}
-
-		ip := item.Ip
 		if item.UUID == nil {
-			r.log.Errorw("could not determine uuid of device", "mac", mac, "ip", ip)
+			r.log.Errorw("could not determine uuid of device", "mac", item.Mac, "ip", item.Ip)
 			continue
 		}
 
