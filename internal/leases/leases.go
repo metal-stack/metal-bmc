@@ -30,14 +30,9 @@ func (l Leases) LatestByMac() map[string]Lease {
 }
 
 func ReadLeases(leaseFile string) (Leases, error) {
-	leasesContent := mustRead(leaseFile)
-	return parse(leasesContent)
-}
-
-func mustRead(name string) string {
-	c, err := os.ReadFile(name)
+	leasesContent, err := os.ReadFile(leaseFile)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return string(c)
+	return parse(string(leasesContent))
 }

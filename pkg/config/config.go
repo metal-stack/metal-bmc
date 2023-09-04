@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL and PANIC
+	// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL
 	LogLevel    string `required:"false" default:"debug" desc:"set log level" split_words:"true"`
 	PartitionID string `required:"true" desc:"set the partition ID" envconfig:"partition_id"`
 
