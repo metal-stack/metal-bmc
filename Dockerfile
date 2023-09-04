@@ -3,8 +3,6 @@ WORKDIR /work
 COPY . .
 RUN make
 
-FROM r.metal-stack.io/metal/supermicro:2.11.0 as sum
-
 FROM debian:12-slim
 
 RUN apt update \
@@ -15,7 +13,10 @@ RUN apt update \
  # /usr/bin/sum is provided by busybox
  && rm /usr/bin/sum
 
+# Add missing file from ipmitool
+ADD https://www.iana.org/assignments/enterprise-numbers.txt /usr/share/misc/enterprise-numbers.txt 
+
 COPY --from=builder /work/bin/metal-bmc /
-COPY --from=sum /usr/bin/sum /usr/bin/sum
+COPY --from=r.metal-stack.io/metal/supermicro:2.11.0 /usr/bin/sum /usr/bin/sum
 
 CMD ["/metal-bmc"]

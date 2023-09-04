@@ -7,7 +7,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-hal v0.4.3
 	github.com/metal-stack/metal-go v0.23.2
-	github.com/metal-stack/metal-lib v0.13.2
+	github.com/metal-stack/metal-lib v0.13.3
 	github.com/metal-stack/v v1.0.3
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/zap v1.25.0
@@ -49,7 +49,7 @@ require (
 	github.com/lestrrat-go/jwx v1.2.26 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/metal-stack/security v0.6.6 // indirect
+	github.com/metal-stack/security v0.6.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/nsqio/go-nsq v1.1.0 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
@@ -61,17 +61,16 @@ require (
 	github.com/stmcginnis/gofish v0.14.0 // indirect
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702 // indirect
 	go.mongodb.org/mongo-driver v1.12.1 // indirect
-	go.opentelemetry.io/otel v1.16.0 // indirect
-	go.opentelemetry.io/otel/metric v1.16.0 // indirect
-	go.opentelemetry.io/otel/trace v1.16.0 // indirect
+	go.opentelemetry.io/otel v1.17.0 // indirect
+	go.opentelemetry.io/otel/metric v1.17.0 // indirect
+	go.opentelemetry.io/otel/trace v1.17.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
 	golang.org/x/oauth2 v0.11.0 // indirect
-	golang.org/x/sys v0.11.0 // indirect
-	golang.org/x/text v0.12.0 // indirect
+	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
-	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
