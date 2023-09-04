@@ -13,7 +13,9 @@ RUN apt update \
  # /usr/bin/sum is provided by busybox
  && rm /usr/bin/sum
 
-# Add missing file from ipmitool
+# Add missing file from ipmitool debian packaging
+# see https://github.com/ipmitool/ipmitool/issues/377
+# see https://groups.google.com/g/linux.debian.bugs.dist/c/ukUAcfnm280
 ADD https://www.iana.org/assignments/enterprise-numbers.txt /usr/share/misc/enterprise-numbers.txt 
 
 COPY --from=builder /work/bin/metal-bmc /
