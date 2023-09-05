@@ -40,6 +40,7 @@ func (b *BMCService) InitConsumer() error {
 	config.TlsConfig = &tls.Config{
 		Certificates: []tls.Certificate{cert},
 		ClientCAs:    caCertPool,
+		RootCAs:      caCertPool,
 		ClientAuth:   tls.RequireAndVerifyClientCert,
 		MinVersion:   tls.VersionTLS12,
 	}
