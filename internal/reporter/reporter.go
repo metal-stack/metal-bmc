@@ -1,6 +1,7 @@
 package reporter
 
 import (
+	"fmt"
 	"net/netip"
 	"os"
 	"os/signal"
@@ -15,6 +16,7 @@ import (
 	"github.com/metal-stack/metal-go/api/models"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
+	"golang.org/x/sync/semaphore"
 )
 
 // reporter reports information about bmc, bios and dhcp ip of bmc to metal-api
@@ -22,6 +24,7 @@ type reporter struct {
 	cfg    *config.Config
 	log    *zap.SugaredLogger
 	client metalgo.Client
+	sem    *semaphore.Weighted
 }
 
 // New will create a reporter for MachineIpmiReports
@@ -30,6 +33,7 @@ func New(log *zap.SugaredLogger, cfg *config.Config, client metalgo.Client) (*re
 		cfg:    cfg,
 		log:    log,
 		client: client,
+		sem:    semaphore.NewWeighted(1),
 	}, nil
 }
 
@@ -37,65 +41,79 @@ func (r reporter) Run() {
 	periodic := time.NewTicker(r.cfg.ReportInterval)
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+	// ensure that
 
 	for {
 		select {
 		case <-periodic.C:
-			start := time.Now()
-			ls, err := leases.ReadLeases(r.cfg.LeaseFile)
+			err := r.collectAndReport()
 			if err != nil {
-				r.log.Errorw("could not parse leases file", "error", err)
+				r.log.Errorw("collect and report", "error", err)
 			}
-			if len(ls) == 0 {
-				r.log.Errorw("empty leases returned, nothing to report")
-				continue
-			}
-			active := ls.FilterActive()
-			byMac := active.LatestByMac()
-			r.log.Infow("consider reporting leases to metal-api", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
-
-			var items []*leases.ReportItem
-			g := new(errgroup.Group)
-			g.SetLimit(20)
-
-			for _, l := range byMac {
-				if !r.isInAllowedCidr(l.Ip) {
-					continue
-				}
-
-				if slices.Contains(r.cfg.IgnoreMacs, l.Mac) {
-					continue
-				}
-
-				item := &leases.ReportItem{
-					Lease: l,
-					Log:   r.log,
-				}
-				items = append(items, item)
-			}
-			r.log.Infow("reporting leases to metal-api", "count", len(items))
-
-			for _, item := range items {
-				item := item
-				g.Go(func() error {
-					item.EnrichWithBMCDetails(r.cfg.IpmiPort, r.cfg.IpmiUser, r.cfg.IpmiPassword)
-					return nil
-				})
-			}
-			err = g.Wait()
-			if err != nil {
-				r.log.Errorw("could not collect ipmi details", "error", err)
-			}
-
-			err = r.report(items)
-			if err != nil {
-				r.log.Warnw("could not report ipmi addresses", "error", err)
-			}
-			r.log.Infow("reporting leases to metal-api", "took", time.Since(start))
 		case <-signals:
 			return
 		}
 	}
+}
+
+func (r reporter) collectAndReport() error {
+	if !r.sem.TryAcquire(1) {
+		r.log.Warn("lease reporting is still running")
+		return nil
+	}
+	defer r.sem.Release(1)
+
+	start := time.Now()
+	ls, err := leases.ReadLeases(r.cfg.LeaseFile)
+	if err != nil {
+		r.log.Errorw("could not parse leases file, partial results will considered", "error", err)
+	}
+	if len(ls) == 0 {
+		r.log.Warn("empty leases returned, nothing to report")
+		return nil
+	}
+	active := ls.FilterActive()
+	byMac := active.LatestByMac()
+	r.log.Infow("consider reporting leases to metal-api", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
+
+	var items []*leases.ReportItem
+	for _, l := range byMac {
+		if !r.isInAllowedCidr(l.Ip) {
+			continue
+		}
+
+		if slices.Contains(r.cfg.IgnoreMacs, l.Mac) {
+			continue
+		}
+
+		item := &leases.ReportItem{
+			Lease: l,
+			Log:   r.log,
+		}
+		items = append(items, item)
+	}
+	r.log.Infow("reporting leases to metal-api", "count", len(items))
+
+	g := new(errgroup.Group)
+	g.SetLimit(20)
+	for _, item := range items {
+		item := item
+		g.Go(func() error {
+			item.EnrichWithBMCDetails(r.cfg.IpmiPort, r.cfg.IpmiUser, r.cfg.IpmiPassword)
+			return nil
+		})
+	}
+	err = g.Wait()
+	if err != nil {
+		r.log.Errorw("could not enrich all ipmi details", "error", err)
+	}
+
+	err = r.report(items)
+	if err != nil {
+		return fmt.Errorf("could not report ipmi addresses %w", err)
+	}
+	r.log.Infow("reporting leases to metal-api", "took", time.Since(start))
+	return nil
 }
 
 func (r reporter) isInAllowedCidr(ip string) bool {
