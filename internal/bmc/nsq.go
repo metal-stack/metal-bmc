@@ -29,15 +29,15 @@ func (b *BMCService) InitConsumer() error {
 		return err
 	}
 
-	tlsConfig := &tls.Config{
+	config := nsq.NewConfig()
+	config.TlsConfig = &tls.Config{
 		Certificates: []tls.Certificate{cert},
 		ClientCAs:    caCertPool,
 		ClientAuth:   tls.RequireAndVerifyClientCert,
 		MinVersion:   tls.VersionTLS13,
 	}
+	config.TlsV1 = true
 
-	config := nsq.NewConfig()
-	config.TlsConfig = tlsConfig
 	consumer, err := nsq.NewConsumer(b.machineTopic, mqChannel, config)
 	if err != nil {
 		return err
