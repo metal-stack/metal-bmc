@@ -58,7 +58,7 @@ func main() {
 	}
 
 	// BMC Console access
-	console, err := bmc.NewConsole(log, client, cfg.ConsoleCACertFile, cfg.ConsoleCertFile, cfg.ConsoleKeyFile, cfg.ConsolePort)
+	console, err := bmc.NewConsole(log, client, cfg)
 	if err != nil {
 		log.Fatalw("unable to create bmc console", "error", err)
 	}

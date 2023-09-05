@@ -12,6 +12,7 @@ import (
 
 	"github.com/metal-stack/go-hal/connect"
 	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
+	"github.com/metal-stack/metal-bmc/pkg/config"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/metal-go/api/client/machine"
 
@@ -28,9 +29,9 @@ type console struct {
 	client    metalgo.Client
 }
 
-func NewConsole(log *zap.SugaredLogger, client metalgo.Client, caCertFile, certFile, keyFile string, port int) (*console, error) {
+func NewConsole(log *zap.SugaredLogger, client metalgo.Client, c config.Config) (*console, error) {
 
-	caCert, err := os.ReadFile(caCertFile)
+	caCert, err := os.ReadFile(c.ConsoleCACertFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load cert: %w", err)
 	}
@@ -38,7 +39,7 @@ func NewConsole(log *zap.SugaredLogger, client metalgo.Client, caCertFile, certF
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
 
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	cert, err := tls.LoadX509KeyPair(c.ConsoleCertFile, c.ConsoleKeyFile)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +51,7 @@ func NewConsole(log *zap.SugaredLogger, client metalgo.Client, caCertFile, certF
 		MinVersion:   tls.VersionTLS13,
 	}
 
-	bb, err := os.ReadFile(keyFile)
+	bb, err := os.ReadFile(c.ConsoleKeyFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load ssh server key:%w", err)
 	}
@@ -62,7 +63,7 @@ func NewConsole(log *zap.SugaredLogger, client metalgo.Client, caCertFile, certF
 	return &console{
 		log:       log,
 		tlsConfig: tlsConfig,
-		port:      port,
+		port:      c.ConsolePort,
 		hostKey:   hostKey,
 		client:    client,
 	}, nil
