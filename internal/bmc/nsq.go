@@ -21,13 +21,15 @@ func (b *BMCService) InitConsumer() error {
 		return fmt.Errorf("failed to read ca cert: %w", err)
 	}
 
-	caCert, err := x509.ParseCertificate(caCertRaw)
+	caCertPool, err := x509.SystemCertPool()
 	if err != nil {
-		return fmt.Errorf("failed to parse ca cert: %w", err)
+		return err
 	}
 
-	caCertPool := x509.NewCertPool()
-	caCertPool.AddCert(caCert)
+	ok := caCertPool.AppendCertsFromPEM(caCertRaw)
+	if !ok {
+		return fmt.Errorf("unable to add ca to cert pool")
+	}
 
 	cert, err := tls.LoadX509KeyPair(b.mqClientCertFile, b.mqClientCertKeyFile)
 	if err != nil {
