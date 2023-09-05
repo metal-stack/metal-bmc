@@ -16,13 +16,18 @@ const (
 )
 
 func (b *BMCService) InitConsumer() error {
-	caCert, err := os.ReadFile(b.mqCACertFile)
+	caCertRaw, err := os.ReadFile(b.mqCACertFile)
 	if err != nil {
-		return fmt.Errorf("failed to read cert: %w", err)
+		return fmt.Errorf("failed to read ca cert: %w", err)
+	}
+
+	caCert, err := x509.ParseCertificate(caCertRaw)
+	if err != nil {
+		return fmt.Errorf("failed to parse ca cert: %w", err)
 	}
 
 	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
+	caCertPool.AddCert(caCert)
 
 	cert, err := tls.LoadX509KeyPair(b.mqClientCertFile, b.mqClientCertKeyFile)
 	if err != nil {
@@ -31,11 +36,10 @@ func (b *BMCService) InitConsumer() error {
 
 	config := nsq.NewConfig()
 	config.TlsConfig = &tls.Config{
-		Certificates:       []tls.Certificate{cert},
-		ClientCAs:          caCertPool,
-		ClientAuth:         tls.RequireAndVerifyClientCert,
-		MinVersion:         tls.VersionTLS12,
-		InsecureSkipVerify: true, //nolint FIXME
+		Certificates: []tls.Certificate{cert},
+		ClientCAs:    caCertPool,
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		MinVersion:   tls.VersionTLS12,
 	}
 	config.TlsV1 = true
 
