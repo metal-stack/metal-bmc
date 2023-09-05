@@ -20,7 +20,7 @@ type Config struct {
 	IpmiUser        string        `required:"false" default:"ADMIN" desc:"the ipmi user" split_words:"true"`
 	IpmiPassword    string        `required:"false" default:"ADMIN" desc:"the ipmi password" split_words:"true"`
 	IgnoreMacs      []string      `required:"false" desc:"mac addresses to ignore" split_words:"true"`
-	AllowedCidrs    []string      `required:"false" desc:"filters dhcp leases" split_words:"true"`
+	AllowedCidrs    []string      `required:"false" default:"10.0.0.0/8" desc:"filters dhcp leases" split_words:"true"`
 
 	// NSQ connection parameters
 	MQAddress        string        `required:"false" default:"localhost:4161" desc:"set the MQ server address" envconfig:"mq_address"`

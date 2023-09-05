@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"slices"
-	"sync"
 	"syscall"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 )
 
 // reporter reports information about bmc, bios and dhcp ip of bmc to metal-api
@@ -51,16 +51,14 @@ func (r reporter) Run() {
 			}
 			active := ls.FilterActive()
 			byMac := active.LatestByMac()
-			r.log.Infow("reporting leases to metal-api", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
+			r.log.Infow("consider reporting leases to metal-api", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
 
-			mtx := new(sync.Mutex)
 			var items []*leases.ReportItem
-
-			wg := new(sync.WaitGroup)
-			wg.Add(len(byMac))
+			g := errgroup.Group{}
 
 			for _, l := range byMac {
 				if !r.isInAllowedCidr(l.Ip) {
+					r.log.Debugw("skipping", "ip", l.Ip, "mac", l.Mac)
 					continue
 				}
 
@@ -69,16 +67,19 @@ func (r reporter) Run() {
 				}
 
 				item := leases.NewReportItem(l, r.log)
-				go func() {
-					item.EnrichWithBMCDetails(r.cfg.IpmiPort, r.cfg.IpmiUser, r.cfg.IpmiPassword)
-					mtx.Lock()
-					items = append(items, item)
-					wg.Done()
-					mtx.Unlock()
-				}()
+				items = append(items, item)
 			}
-
-			wg.Wait()
+			for _, item := range items {
+				item := item
+				g.Go(func() error {
+					item.EnrichWithBMCDetails(r.cfg.IpmiPort, r.cfg.IpmiUser, r.cfg.IpmiPassword)
+					return nil
+				})
+			}
+			err = g.Wait()
+			if err != nil {
+				r.log.Errorw("could not collect ipmi details", "error", err)
+			}
 
 			err = r.report(items)
 			if err != nil {
