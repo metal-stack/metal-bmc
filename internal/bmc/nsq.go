@@ -31,10 +31,11 @@ func (b *BMCService) InitConsumer() error {
 
 	config := nsq.NewConfig()
 	config.TlsConfig = &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		ClientCAs:    caCertPool,
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		MinVersion:   tls.VersionTLS12,
+		Certificates:       []tls.Certificate{cert},
+		ClientCAs:          caCertPool,
+		ClientAuth:         tls.RequireAndVerifyClientCert,
+		MinVersion:         tls.VersionTLS12,
+		InsecureSkipVerify: true, //nolint FIXME
 	}
 	config.TlsV1 = true
 
