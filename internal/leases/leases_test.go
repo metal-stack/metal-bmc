@@ -9,7 +9,7 @@ import (
 
 func TestFilterActive(t *testing.T) {
 	assert := assert.New(t)
-	l, err := parse(LEASES_CONTENT)
+	l, err := parse(sampleLeaseContent)
 	assert.NoError(err)
 	assert.Equal(Leases{}, l.FilterActive())
 }
