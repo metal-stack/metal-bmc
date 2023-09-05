@@ -18,13 +18,13 @@ const (
 func (b *BMCService) InitConsumer() error {
 	caCert, err := os.ReadFile(b.mqCACertFile)
 	if err != nil {
-		return fmt.Errorf("failed to load cert: %w", err)
+		return fmt.Errorf("failed to read cert: %w", err)
 	}
 
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
 
-	cert, err := tls.LoadX509KeyPair(b.mqClientCertFile, b.mqClientCertFile) // FIXME: where is the key?
+	cert, err := tls.LoadX509KeyPair(b.mqClientCertFile, b.mqClientCertKeyFile)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (b *BMCService) InitConsumer() error {
 
 	consumer.AddHandler(b)
 
-	err = consumer.ConnectToNSQD(b.mqAddress) // FIXME: must point to NSQd, not lookupd
+	err = consumer.ConnectToNSQD(b.mqAddress)
 	if err != nil {
 		return err
 	}

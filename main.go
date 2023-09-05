@@ -50,15 +50,7 @@ func main() {
 	}
 
 	// BMC Events via NSQ
-	b := bmc.New(bmc.Config{
-		Log:              log,
-		MQAddress:        cfg.MQAddress,
-		MQCACertFile:     cfg.MQCACertFile,
-		MQClientCertFile: cfg.MQClientCertFile,
-		MQLogLevel:       cfg.MQLogLevel,
-		MachineTopic:     cfg.MachineTopic,
-		MachineTopicTTL:  cfg.MachineTopicTTL,
-	})
+	b := bmc.New(log, &cfg)
 
 	err = b.InitConsumer()
 	if err != nil {
