@@ -1,7 +1,6 @@
 package leases
 
 import (
-	"fmt"
 	"os"
 	"time"
 )
@@ -31,18 +30,9 @@ func (l Leases) LatestByMac() map[string]Lease {
 }
 
 func ReadLeases(leaseFile string) (Leases, error) {
-	leasesContent := mustRead(leaseFile)
-	leases, err := Parse(leasesContent)
+	leasesContent, err := os.ReadFile(leaseFile)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse leases file:%w", err)
+		return nil, err
 	}
-	return leases, nil
-}
-
-func mustRead(name string) string {
-	c, err := os.ReadFile(name)
-	if err != nil {
-		panic(err)
-	}
-	return string(c)
+	return parse(string(leasesContent))
 }

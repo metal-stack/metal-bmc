@@ -42,6 +42,14 @@ func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword s
 	if board != nil {
 		i.BiosVersion = &board.BiosVersion
 		i.IndicatorLED = &board.IndicatorLED
+		if board.PowerMetric != nil {
+			i.PowerMetric = &models.V1PowerMetric{
+				Averageconsumedwatts: &board.PowerMetric.AverageConsumedWatts,
+				Intervalinmin:        &board.PowerMetric.IntervalInMin,
+				Maxconsumedwatts:     &board.PowerMetric.MaxConsumedWatts,
+				Minconsumedwatts:     &board.PowerMetric.MinConsumedWatts,
+			}
+		}
 	}
 
 	u, err := ob.UUID()
