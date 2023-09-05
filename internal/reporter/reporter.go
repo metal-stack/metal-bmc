@@ -55,11 +55,10 @@ func (r reporter) Run() {
 
 			var items []*leases.ReportItem
 			g := new(errgroup.Group)
-			g.SetLimit(10)
+			g.SetLimit(20)
 
 			for _, l := range byMac {
 				if !r.isInAllowedCidr(l.Ip) {
-					r.log.Debugw("skipping", "ip", l.Ip, "mac", l.Mac)
 					continue
 				}
 
@@ -67,9 +66,14 @@ func (r reporter) Run() {
 					continue
 				}
 
-				item := leases.NewReportItem(l, r.log)
+				item := &leases.ReportItem{
+					Lease: l,
+					Log:   r.log,
+				}
 				items = append(items, item)
 			}
+			r.log.Infow("reporting leases to metal-api", "count", len(items))
+
 			for _, item := range items {
 				item := item
 				g.Go(func() error {
