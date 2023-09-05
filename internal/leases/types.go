@@ -27,19 +27,3 @@ type ReportItem struct {
 	IndicatorLED *string
 	PowerMetric  *models.V1PowerMetric
 }
-
-func NewReportItem(l Lease, log *zap.SugaredLogger) *ReportItem {
-	return &ReportItem{
-		Lease: l,
-		Log:   log,
-	}
-}
-
-func (i *ReportItem) MacContainedIn(macs []string) bool {
-	for _, m := range macs {
-		if m == i.Mac {
-			return true
-		}
-	}
-	return false
-}

@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/metal-stack/metal-bmc/domain"
 	"github.com/metal-stack/metal-bmc/internal/bmc"
+	"github.com/metal-stack/metal-bmc/pkg/config"
 	metalgo "github.com/metal-stack/metal-go"
 
 	"github.com/metal-stack/metal-bmc/internal/reporter"
@@ -16,8 +16,12 @@ import (
 )
 
 func main() {
-	var cfg domain.Config
+	var cfg config.Config
 	if err := envconfig.Process("METAL_BMC", &cfg); err != nil {
+		panic(fmt.Errorf("bad configuration: %w", err))
+	}
+
+	if err := cfg.Validate(); err != nil {
 		panic(fmt.Errorf("bad configuration: %w", err))
 	}
 
