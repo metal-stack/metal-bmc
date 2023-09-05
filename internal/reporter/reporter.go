@@ -54,7 +54,8 @@ func (r reporter) Run() {
 			r.log.Infow("consider reporting leases to metal-api", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
 
 			var items []*leases.ReportItem
-			g := errgroup.Group{}
+			g := new(errgroup.Group)
+			g.SetLimit(10)
 
 			for _, l := range byMac {
 				if !r.isInAllowedCidr(l.Ip) {
