@@ -41,6 +41,7 @@ func (r reporter) Run() {
 	for {
 		select {
 		case <-periodic.C:
+			start := time.Now()
 			ls, err := leases.ReadLeases(r.cfg.LeaseFile)
 			if err != nil {
 				r.log.Errorw("could not parse leases file", "error", err)
@@ -90,6 +91,7 @@ func (r reporter) Run() {
 			if err != nil {
 				r.log.Warnw("could not report ipmi addresses", "error", err)
 			}
+			r.log.Infow("reporting leases to metal-api", "took", time.Since(start))
 		case <-signals:
 			return
 		}
