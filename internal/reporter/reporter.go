@@ -41,8 +41,6 @@ func (r reporter) Run() {
 	periodic := time.NewTicker(r.cfg.ReportInterval)
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
-	// ensure that
-
 	for {
 		select {
 		case <-periodic.C:
@@ -78,6 +76,7 @@ func (r reporter) collectAndReport() error {
 
 	var items []*leases.ReportItem
 	for _, l := range byMac {
+		l := l
 		if !r.isInAllowedCidr(l.Ip) {
 			continue
 		}
@@ -95,6 +94,7 @@ func (r reporter) collectAndReport() error {
 	r.log.Infow("reporting leases to metal-api", "count", len(items))
 
 	g := new(errgroup.Group)
+	// Allow 20 goroutines run in parallel at max
 	g.SetLimit(20)
 	for _, item := range items {
 		item := item
