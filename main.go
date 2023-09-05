@@ -50,15 +50,7 @@ func main() {
 	}
 
 	// BMC Events via NSQ
-	b := bmc.New(bmc.Config{
-		Log:              log,
-		MQAddress:        cfg.MQAddress,
-		MQCACertFile:     cfg.MQCACertFile,
-		MQClientCertFile: cfg.MQClientCertFile,
-		MQLogLevel:       cfg.MQLogLevel,
-		MachineTopic:     cfg.MachineTopic,
-		MachineTopicTTL:  cfg.MachineTopicTTL,
-	})
+	b := bmc.New(log, &cfg)
 
 	err = b.InitConsumer()
 	if err != nil {
@@ -66,7 +58,7 @@ func main() {
 	}
 
 	// BMC Console access
-	console, err := bmc.NewConsole(log, client, cfg.ConsoleCACertFile, cfg.ConsoleCertFile, cfg.ConsoleKeyFile, cfg.ConsolePort)
+	console, err := bmc.NewConsole(log, client, cfg)
 	if err != nil {
 		log.Fatalw("unable to create bmc console", "error", err)
 	}

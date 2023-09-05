@@ -7,8 +7,8 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-hal v0.4.3
 	github.com/metal-stack/metal-go v0.23.2
-	github.com/metal-stack/metal-lib v0.13.3
 	github.com/metal-stack/v v1.0.3
+	github.com/nsqio/go-nsq v1.1.0
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/zap v1.25.0
 	golang.org/x/crypto v0.12.0
@@ -50,9 +50,9 @@ require (
 	github.com/lestrrat-go/jwx v1.2.26 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/metal-stack/metal-lib v0.13.3 // indirect
 	github.com/metal-stack/security v0.6.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/nsqio/go-nsq v1.1.0 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
