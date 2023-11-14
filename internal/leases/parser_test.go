@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var sampleLeaseContent = `
@@ -35,7 +36,7 @@ lease 192.168.2.30 {
 func TestParse(t *testing.T) {
 	assert := assert.New(t)
 	l, err := parse(sampleLeaseContent)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	b, _ := time.Parse(leaseDateFormat, "2019/06/27 13:30:21")
 	e, _ := time.Parse(leaseDateFormat, "2019/06/27 13:40:21")

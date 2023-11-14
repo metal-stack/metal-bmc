@@ -5,12 +5,13 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFilterActive(t *testing.T) {
 	assert := assert.New(t)
 	l, err := parse(sampleLeaseContent)
-	assert.NoError(err)
+	require.NoError(t, err)
 	assert.Equal(Leases{}, l.FilterActive())
 }
 
