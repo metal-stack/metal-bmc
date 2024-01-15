@@ -88,8 +88,8 @@ github.com/lestrrat-go/option v1.0.1 h1:oAzP2fvZGQKWkvHa1/SAcFolBEca1oN+mQ7eooNB
 github.com/lestrrat-go/option v1.0.1/go.mod h1:5ZHFbivi4xwXxhxY9XHDe2FHo6/Z7WWmtT7T5nBBp3I=
 github.com/mailru/easyjson v0.7.7 h1:UGYAvKxe3sBsEDzO8ZeWOSlIQfWFlxbzLZe7hwFURr0=
 github.com/mailru/easyjson v0.7.7/go.mod h1:xzfreul335JAWq5oZzymOObrkdz5UnU4kGfJJLY9Nlc=
-github.com/metal-stack/go-hal v0.5.0 h1:0w+rRgKy05ltresjGFL0Bj3dPAknYnIdjuAkOlUJuZ8=
-github.com/metal-stack/go-hal v0.5.0/go.mod h1:ddFBHVHzDbAk8mOKq77SlTk7EM7f9d5Rmu69+49IwZQ=
+github.com/metal-stack/go-hal v0.5.1-0.20240115102607-8b0140441dae h1:4Sg8DjBkAGZjlCMgsxfJr9whj/rdSYW610NNkG9jJ70=
+github.com/metal-stack/go-hal v0.5.1-0.20240115102607-8b0140441dae/go.mod h1:ddFBHVHzDbAk8mOKq77SlTk7EM7f9d5Rmu69+49IwZQ=
 github.com/metal-stack/metal-go v0.26.2 h1:KZRV1wtCsj0dMo4GpW2+XemmAkPZAYFjbGe7QhhcH1k=
 github.com/metal-stack/metal-go v0.26.2/go.mod h1:olJ3Az7RBh39Q5WFCJOQBd7cJi0xgGYwMTEIFvkDQQY=
 github.com/metal-stack/metal-lib v0.14.2 h1:ntIZiV8fVoWsgPLXOy9xrObZr1NdU5caYUP0zzefUME=
