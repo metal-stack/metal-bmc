@@ -2,20 +2,19 @@ package bmc
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/metal-stack/go-hal"
 	"github.com/metal-stack/go-hal/connect"
-	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
+	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
 	"github.com/metal-stack/metal-bmc/pkg/config"
-
-	"go.uber.org/zap"
 )
 
 type BMCService struct {
-	log *zap.SugaredLogger
+	log *slog.Logger
 	// NSQ related config options
 	mqAddress           string
 	mqCACertFile        string
@@ -26,7 +25,7 @@ type BMCService struct {
 	machineTopicTTL     time.Duration
 }
 
-func New(log *zap.SugaredLogger, c *config.Config) *BMCService {
+func New(log *slog.Logger, c *config.Config) *BMCService {
 	b := &BMCService{
 		log:                 log,
 		mqAddress:           c.MQAddress,
@@ -107,7 +106,7 @@ func (b *BMCService) outBand(ipmi *IPMI) (hal.OutBand, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert port to an int %w", err)
 	}
-	outBand, err := connect.OutBand(host, port, ipmi.User, ipmi.Password, halzap.New(b.log))
+	outBand, err := connect.OutBand(host, port, ipmi.User, ipmi.Password, halslog.New(b.log))
 	if err != nil {
 		return nil, err
 	}

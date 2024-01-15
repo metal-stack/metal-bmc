@@ -6,30 +6,30 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/metal-stack/go-hal/connect"
-	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
+	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
 	"github.com/metal-stack/metal-bmc/pkg/config"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/metal-go/api/client/machine"
 
 	"github.com/gliderlabs/ssh"
-	"go.uber.org/zap"
 	gossh "golang.org/x/crypto/ssh"
 )
 
 type console struct {
-	log       *zap.SugaredLogger
+	log       *slog.Logger
 	tlsConfig *tls.Config
 	port      int
 	hostKey   gossh.Signer
 	client    metalgo.Client
 }
 
-func NewConsole(log *zap.SugaredLogger, client metalgo.Client, c config.Config) (*console, error) {
+func NewConsole(log *slog.Logger, client metalgo.Client, c config.Config) (*console, error) {
 
 	caCert, err := os.ReadFile(c.ConsoleCACertFile)
 	if err != nil {
@@ -80,59 +80,59 @@ func (c *console) ListenAndServe() error {
 	if err != nil {
 		return fmt.Errorf("failed to create listener: %w", err)
 	}
-	c.log.Infow("starting ssh server", "address", addr)
+	c.log.Info("starting ssh server", "address", addr)
 	return s.Serve(listener)
 }
 
 // FIXME broken error handling, should also be printed to the session
 func (c *console) sessionHandler(s ssh.Session) {
-	c.log.Infow("ssh session handler called", "machineID", s.User())
+	c.log.Info("ssh session handler called", "machineID", s.User())
 	machineID := s.User()
 
 	resp, err := c.client.Machine().FindIPMIMachine(machine.NewFindIPMIMachineParams().WithID(machineID), nil)
 	if err != nil || resp.Payload == nil || resp.Payload.Ipmi == nil {
-		c.log.Errorw("failed to receive IPMI data", "machineID", machineID, "error", err)
+		c.log.Error("failed to receive IPMI data", "machineID", machineID, "error", err)
 		return
 	}
 	metalIPMI := resp.Payload.Ipmi
 
-	c.log.Infow("connection to", "machineID", machineID)
+	c.log.Info("connection to", "machineID", machineID)
 	if metalIPMI == nil {
-		c.log.Errorw("failed to receive IPMI data", "machineID", machineID)
+		c.log.Error("failed to receive IPMI data", "machineID", machineID)
 		return
 	}
 	if metalIPMI.Address == nil {
-		c.log.Errorw("failed to receive IPMI.Address data", "machineID", machineID)
+		c.log.Error("failed to receive IPMI.Address data", "machineID", machineID)
 		return
 	}
 	_, err = io.WriteString(s, fmt.Sprintf("Connecting to console of %q (%s)\n", machineID, *metalIPMI.Address))
 	if err != nil {
-		c.log.Warnw("failed to write to console", "machineID", machineID)
+		c.log.Warn("failed to write to console", "machineID", machineID)
 	}
 
 	host, portStr, found := strings.Cut(*metalIPMI.Address, ":")
 	if !found {
-		c.log.Errorw("invalid ipmi address", "address", *metalIPMI.Address)
+		c.log.Error("invalid ipmi address", "address", *metalIPMI.Address)
 		return
 	}
 	port, err := strconv.Atoi(portStr)
 	if err != nil {
-		c.log.Errorw("invalid port", "port", port, "address", *metalIPMI.Address)
+		c.log.Error("invalid port", "port", port, "address", *metalIPMI.Address)
 		return
 	}
 
-	ob, err := connect.OutBand(host, port, *metalIPMI.User, *metalIPMI.Password, halzap.New(c.log))
+	ob, err := connect.OutBand(host, port, *metalIPMI.User, *metalIPMI.Password, halslog.New(c.log))
 	if err != nil {
-		c.log.Errorw("failed to out-band connect", "host", host, "port", port, "machineID", machineID, "ipmiuser", *metalIPMI.User)
+		c.log.Error("failed to out-band connect", "host", host, "port", port, "machineID", machineID, "ipmiuser", *metalIPMI.User)
 		return
 	}
 
 	err = ob.Console(s)
 	if err != nil {
 		if errors.Is(err, io.EOF) {
-			c.log.Infow("console access terminated")
+			c.log.Info("console access terminated")
 		} else {
-			c.log.Errorw("failed to access console", "machineID", machineID, "error", err)
+			c.log.Error("failed to access console", "machineID", machineID, "error", err)
 		}
 	}
 }

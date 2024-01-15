@@ -34,7 +34,6 @@ lease 192.168.2.30 {
 `
 
 func TestParse(t *testing.T) {
-	assert := assert.New(t)
 	l, err := parse(sampleLeaseContent)
 	require.NoError(t, err)
 
@@ -56,5 +55,5 @@ func TestParse(t *testing.T) {
 		End:   e,
 	}
 
-	assert.Equal(Leases{lease1, lease2}, l)
+	assert.Equal(t, Leases{lease1, lease2}, l)
 }
