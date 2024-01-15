@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/gliderlabs/ssh v0.3.6
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/metal-stack/go-hal v0.4.5-0.20240113144730-3fe624f84cbf
+	github.com/metal-stack/go-hal v0.5.0
 	github.com/metal-stack/metal-go v0.26.2
 	github.com/metal-stack/v v1.0.3
 	github.com/nsqio/go-nsq v1.1.0
