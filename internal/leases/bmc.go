@@ -3,14 +3,14 @@ package leases
 import (
 	"github.com/metal-stack/go-hal"
 	"github.com/metal-stack/go-hal/connect"
-	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
+	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
 	"github.com/metal-stack/metal-go/api/models"
 )
 
 func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword string) {
-	ob, err := connect.OutBand(i.Ip, ipmiPort, ipmiUser, ipmiPassword, halzap.New(i.Log))
+	ob, err := connect.OutBand(i.Ip, ipmiPort, ipmiUser, ipmiPassword, halslog.New(i.Log))
 	if err != nil {
-		i.Log.Errorw("could not establish outband connection to device bmc", "mac", i.Mac, "ip", i.Ip, "err", err)
+		i.Log.Error("could not establish outband connection to device bmc", "mac", i.Mac, "ip", i.Ip, "err", err)
 		return
 	}
 
@@ -28,7 +28,7 @@ func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword s
 			ProductSerial:       bmcDetails.ProductSerial,
 		}
 	} else {
-		i.Log.Warnw("could not retrieve bmc details of device", "mac", i.Mac, "ip", i.Ip, "err", err)
+		i.Log.Warn("could not retrieve bmc details of device", "mac", i.Mac, "ip", i.Ip, "err", err)
 	}
 
 	powerState, err := ob.PowerState()
@@ -57,6 +57,6 @@ func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword s
 		str := u.String()
 		i.UUID = &str
 	} else {
-		i.Log.Warnw("could not determine uuid of device", "mac", i.Mac, "ip", i.Ip, "err", err)
+		i.Log.Warn("could not determine uuid of device", "mac", i.Mac, "ip", i.Ip, "err", err)
 	}
 }
