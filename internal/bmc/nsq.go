@@ -70,14 +70,14 @@ func (b *BMCService) HandleMessage(message *nsq.Message) error {
 		return err
 	}
 
-	b.log.Debugw("got message", "topic", b.machineTopic, "channel", mqChannel, "event", event)
+	b.log.Debug("got message", "topic", b.machineTopic, "channel", mqChannel, "event", event)
 
 	if event.Cmd.IPMI == nil {
 		return fmt.Errorf("event does not contain ipmi details:%v", event)
 	}
 	outBand, err := b.outBand(event.Cmd.IPMI)
 	if err != nil {
-		b.log.Errorw("error creating outband connection", "error", err)
+		b.log.Error("error creating outband connection", "error", err)
 		return err
 	}
 
@@ -117,12 +117,12 @@ func (b *BMCService) HandleMessage(message *nsq.Message) error {
 		case UpdateFirmwareCmd:
 			return b.UpdateFirmware(outBand, &event)
 		default:
-			b.log.Errorw("unhandled command", "topic", b.machineTopic, "channel", "core", "event", event)
+			b.log.Error("unhandled command", "topic", b.machineTopic, "channel", "core", "event", event)
 		}
 	case Create, Update:
 		fallthrough
 	default:
-		b.log.Warnw("unhandled event", "topic", b.machineTopic, "channel", "core", "event", event)
+		b.log.Warn("unhandled event", "topic", b.machineTopic, "channel", "core", "event", event)
 	}
 	return nil
 }

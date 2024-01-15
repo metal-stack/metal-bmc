@@ -5,17 +5,16 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFilterActive(t *testing.T) {
-	assert := assert.New(t)
 	l, err := parse(sampleLeaseContent)
-	assert.NoError(err)
-	assert.Equal(Leases{}, l.FilterActive())
+	require.NoError(t, err)
+	assert.Equal(t, Leases{}, l.FilterActive())
 }
 
 func TestLatestByMac(t *testing.T) {
-	assert := assert.New(t)
 	l1 := Lease{
 		Mac: "aa:aa",
 		End: time.Now(),
@@ -31,5 +30,5 @@ func TestLatestByMac(t *testing.T) {
 	leases := Leases{l1, l2, l3}
 	byMac := leases.LatestByMac()
 	expected := map[string]Lease{"aa:aa": l1, "bb:bb": l2}
-	assert.Equal(expected, byMac)
+	assert.Equal(t, expected, byMac)
 }
