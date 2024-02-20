@@ -7,11 +7,11 @@ import (
 	"github.com/nsqio/go-nsq"
 )
 
-type nsqZapLogger struct {
+type nsqLogger struct {
 	log *slog.Logger
 }
 
-func (n nsqZapLogger) Output(calldepth int, s string) error {
+func (n nsqLogger) Output(calldepth int, s string) error {
 	n.log.Info(s)
 	return nil
 }

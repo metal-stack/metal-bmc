@@ -112,7 +112,7 @@ func (r reporter) collectAndReport() error {
 	if err != nil {
 		return fmt.Errorf("could not report ipmi addresses %w", err)
 	}
-	r.log.Info("reporting leases to metal-api", "took", time.Since(start))
+	r.log.Info("reporting leases to metal-api", "took", time.Since(start).String())
 	return nil
 }
 

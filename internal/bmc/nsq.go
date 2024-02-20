@@ -51,7 +51,7 @@ func (b *BMCService) InitConsumer() error {
 		return err
 	}
 
-	consumer.SetLogger(nsqZapLogger{log: b.log}, nsqMapLevel(b.log))
+	consumer.SetLogger(nsqLogger{log: b.log}, nsqMapLevel(b.log))
 
 	consumer.AddHandler(b)
 
