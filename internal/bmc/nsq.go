@@ -45,7 +45,6 @@ func (b *BMCService) InitConsumer() error {
 		MinVersion:   tls.VersionTLS12,
 	}
 	config.TlsV1 = true
-	config.MaxAttempts = 3
 	config.MaxInFlight = 2
 
 	consumer, err := nsq.NewConsumer(b.machineTopic, mqChannel, config)
@@ -71,7 +70,11 @@ func (b *BMCService) HandleMessage(message *nsq.Message) error {
 		return err
 	}
 
-	b.log.Debug("got message", "topic", b.machineTopic, "channel", mqChannel, "event", event)
+	if message.attempt > 3 {
+		b.log.Warn("ignoring message because of multiple failed attempts", "topic", b.machineTopic, "channel", mqChannel, "event", event, "attempt", message.attempt)	
+		return nil
+	}
+	b.log.Debug("got message", "topic", b.machineTopic, "channel", mqChannel, "event", event, "attempt", message.attempt)
 
 	if event.Cmd.IPMI == nil {
 		return fmt.Errorf("event does not contain ipmi details:%v", event)
