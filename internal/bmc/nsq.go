@@ -45,6 +45,8 @@ func (b *BMCService) InitConsumer() error {
 		MinVersion:   tls.VersionTLS12,
 	}
 	config.TlsV1 = true
+	config.MaxAttempts = 3
+	config.MaxInFlight = 2
 
 	consumer, err := nsq.NewConsumer(b.machineTopic, mqChannel, config)
 	if err != nil {
@@ -52,7 +54,6 @@ func (b *BMCService) InitConsumer() error {
 	}
 
 	consumer.SetLogger(nsqLogger{log: b.log}, nsqMapLevel(b.log))
-
 	consumer.AddHandler(b)
 
 	err = consumer.ConnectToNSQD(b.mqAddress)
