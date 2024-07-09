@@ -45,7 +45,7 @@ func (b *BMCService) InitConsumer() error {
 		MinVersion:   tls.VersionTLS12,
 	}
 	config.TlsV1 = true
-	config.MaxInFlight = 2
+	config.MaxInFlight = 100
 
 	consumer, err := nsq.NewConsumer(b.machineTopic, mqChannel, config)
 	if err != nil {
