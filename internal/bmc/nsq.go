@@ -70,11 +70,11 @@ func (b *BMCService) HandleMessage(message *nsq.Message) error {
 		return err
 	}
 
-	if message.attempt > 3 {
-		b.log.Warn("ignoring message because of multiple failed attempts", "topic", b.machineTopic, "channel", mqChannel, "event", event, "attempt", message.attempt)	
+	if message.Attempts > 3 {
+		b.log.Warn("ignoring message because of multiple failed attempts", "topic", b.machineTopic, "channel", mqChannel, "event", event, "attempts", message.Attempts)	
 		return nil
 	}
-	b.log.Debug("got message", "topic", b.machineTopic, "channel", mqChannel, "event", event, "attempt", message.attempt)
+	b.log.Debug("got message", "topic", b.machineTopic, "channel", mqChannel, "event", event, "attempts", message.Attempts)
 
 	if event.Cmd.IPMI == nil {
 		return fmt.Errorf("event does not contain ipmi details:%v", event)
