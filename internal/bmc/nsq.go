@@ -90,7 +90,7 @@ func (b *BMCService) HandleMessage(message *nsq.Message) error {
 		return err
 	}
 
-	b.log.Info("got message from nsq", "message-id", message.ID, "topic", b.machineTopic, "event", event, "attempt", message.Attempts)
+	b.log.Info("got message from nsq", "topic", b.machineTopic, "event", event, "attempt", message.Attempts)
 
 	if event.Cmd.IPMI == nil {
 		return fmt.Errorf("event does not contain ipmi details:%v", event)
