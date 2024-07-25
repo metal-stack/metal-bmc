@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/metal-stack/go-hal"
 	"github.com/nsqio/go-nsq"
@@ -45,7 +46,26 @@ func (b *BMCService) InitConsumer() error {
 		MinVersion:   tls.VersionTLS12,
 	}
 	config.TlsV1 = true
-	config.MaxInFlight = 100
+
+	// Deadlines for network reads and writes
+	config.ReadTimeout = 10 * time.Second
+	config.WriteTimeout = 10 * time.Second
+
+	// Duration of time between heartbeats. This must be less than ReadTimeout
+	config.HeartbeatInterval = 5 * time.Second
+
+	// Maximum duration when REQueueing (for doubling of deferred requeue)
+	config.MaxRequeueDelay = 10 * time.Second
+	config.DefaultRequeueDelay = 5 * time.Second
+
+	// Maximum amount of time to backoff when processing fails 0 == no backoff
+	config.MaxBackoffDuration = 0 * time.Second // no need for backing off, just requeue
+
+	// Maximum number of times this consumer will attempt to process a message before giving up
+	config.MaxAttempts = 2 // we do not try very often, if it doesn't work it's probably for a reason
+
+	// Maximum number of messages to allow in flight (concurrency knob)
+	config.MaxInFlight = 10 // handling 10 machines in parallel should be enough
 
 	consumer, err := nsq.NewConsumer(b.machineTopic, mqChannel, config)
 	if err != nil {
@@ -70,11 +90,7 @@ func (b *BMCService) HandleMessage(message *nsq.Message) error {
 		return err
 	}
 
-	if message.Attempts > 3 {
-		b.log.Warn("ignoring message because of multiple failed attempts", "topic", b.machineTopic, "channel", mqChannel, "event", event, "attempts", message.Attempts)	
-		return nil
-	}
-	b.log.Debug("got message", "topic", b.machineTopic, "channel", mqChannel, "event", event, "attempts", message.Attempts)
+	b.log.Info("got message from nsq", "message-id", message.ID, "topic", b.machineTopic, "event", event, "attempt", message.Attempts)
 
 	if event.Cmd.IPMI == nil {
 		return fmt.Errorf("event does not contain ipmi details:%v", event)
