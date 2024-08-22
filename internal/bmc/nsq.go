@@ -55,8 +55,8 @@ func (b *BMCService) InitConsumer() error {
 	config.HeartbeatInterval = 5 * time.Second
 
 	// Maximum duration when REQueueing (for doubling of deferred requeue)
-	config.MaxRequeueDelay = 10 * time.Second
-	config.DefaultRequeueDelay = 5 * time.Second
+	config.MaxRequeueDelay = 5 * time.Second
+	config.DefaultRequeueDelay = 3 * time.Second
 
 	// Maximum amount of time to backoff when processing fails 0 == no backoff
 	config.MaxBackoffDuration = 0 * time.Second // no need for backing off, just requeue
