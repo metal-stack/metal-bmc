@@ -18,17 +18,18 @@ func (n nsqLogger) Output(calldepth int, s string) error {
 
 func nsqMapLevel(log *slog.Logger) nsq.LogLevel {
 	ctx := context.Background()
-	if log.Enabled(ctx, slog.LevelDebug) {
-		return nsq.LogLevelDebug
-	}
-	if log.Enabled(ctx, slog.LevelInfo) {
-		return nsq.LogLevelInfo
-	}
 	if log.Enabled(ctx, slog.LevelError) {
 		return nsq.LogLevelError
 	}
 	if log.Enabled(ctx, slog.LevelWarn) {
 		return nsq.LogLevelWarning
 	}
+	if log.Enabled(ctx, slog.LevelInfo) {
+		return nsq.LogLevelInfo
+	}
+	if log.Enabled(ctx, slog.LevelDebug) {
+		return nsq.LogLevelDebug
+	}
+
 	return nsq.LogLevelInfo
 }
