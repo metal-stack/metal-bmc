@@ -99,8 +99,7 @@ func (r reporter) collectAndReport() error {
 	for _, item := range items {
 		item := item
 		g.Go(func() error {
-			item.EnrichWithBMCDetails(r.cfg.IpmiPort, r.cfg.IpmiUser, r.cfg.IpmiPassword)
-			return nil
+			return item.EnrichWithBMCDetails(r.cfg.IpmiPort, r.cfg.IpmiUser, r.cfg.IpmiPassword)
 		})
 	}
 	err = g.Wait()

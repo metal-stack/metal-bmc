@@ -7,11 +7,11 @@ import (
 	"github.com/metal-stack/metal-go/api/models"
 )
 
-func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword string) {
+func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword string) error {
 	ob, err := connect.OutBand(i.Ip, ipmiPort, ipmiUser, ipmiPassword, halslog.New(i.Log))
 	if err != nil {
 		i.Log.Error("could not establish outband connection to device bmc", "mac", i.Mac, "ip", i.Ip, "err", err)
-		return
+		return err
 	}
 
 	bmcDetails, err := ob.BMCConnection().BMC()
@@ -29,6 +29,7 @@ func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword s
 		}
 	} else {
 		i.Log.Warn("could not retrieve bmc details of device", "mac", i.Mac, "ip", i.Ip, "err", err)
+		return err
 	}
 
 	powerState, err := ob.PowerState()
@@ -51,11 +52,11 @@ func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword s
 			}
 		}
 		var powerSupplies []*models.V1PowerSupply
-		for _, ps := range i.PowerSupplies {
+		for _, ps := range board.PowerSupplies {
 			powerSupplies = append(powerSupplies, &models.V1PowerSupply{
 				Status: &models.V1PowerSupplyStatus{
-					Health: ps.Status.Health,
-					State:  ps.Status.State,
+					Health: &ps.Status.Health,
+					State:  &ps.Status.State,
 				},
 			})
 		}
@@ -68,5 +69,7 @@ func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword s
 		i.UUID = &str
 	} else {
 		i.Log.Warn("could not determine uuid of device", "mac", i.Mac, "ip", i.Ip, "err", err)
+		return err
 	}
+	return nil
 }
