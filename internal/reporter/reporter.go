@@ -155,6 +155,7 @@ func (r reporter) report(items []*leases.ReportItem) error {
 			PowerState:        item.Powerstate,
 			IndicatorLEDState: item.IndicatorLED,
 			PowerMetric:       item.PowerMetric,
+			PowerSupplies:     item.PowerSupplies,
 		}
 		reports[*item.UUID] = report
 	}

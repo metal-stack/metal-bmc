@@ -50,6 +50,16 @@ func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword s
 				Minconsumedwatts:     &board.PowerMetric.MinConsumedWatts,
 			}
 		}
+		var powerSupplies []*models.V1PowerSupply
+		for _, ps := range i.PowerSupplies {
+			powerSupplies = append(powerSupplies, &models.V1PowerSupply{
+				Status: &models.V1PowerSupplyStatus{
+					Health: ps.Status.Health,
+					State:  ps.Status.State,
+				},
+			})
+		}
+		i.PowerSupplies = powerSupplies
 	}
 
 	u, err := ob.UUID()
