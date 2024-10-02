@@ -5,8 +5,8 @@ go 1.23
 require (
 	github.com/gliderlabs/ssh v0.3.7
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/metal-stack/go-hal v0.5.4
-	github.com/metal-stack/metal-go v0.35.2
+	github.com/metal-stack/go-hal v0.5.5
+	github.com/metal-stack/metal-go v0.37.1
 	github.com/metal-stack/v v1.0.3
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/stretchr/testify v1.9.0

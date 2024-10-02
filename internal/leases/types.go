@@ -18,12 +18,13 @@ type Leases []Lease
 
 type ReportItem struct {
 	Lease
-	Log          *slog.Logger
-	UUID         *string
-	BmcVersion   *string
-	BiosVersion  *string
-	FRU          *models.V1MachineFru
-	Powerstate   *string
-	IndicatorLED *string
-	PowerMetric  *models.V1PowerMetric
+	Log           *slog.Logger
+	UUID          *string
+	BmcVersion    *string
+	BiosVersion   *string
+	FRU           *models.V1MachineFru
+	Powerstate    *string
+	IndicatorLED  *string
+	PowerMetric   *models.V1PowerMetric
+	PowerSupplies []*models.V1PowerSupply
 }
