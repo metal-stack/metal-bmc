@@ -80,8 +80,8 @@ github.com/lestrrat-go/option v1.0.1 h1:oAzP2fvZGQKWkvHa1/SAcFolBEca1oN+mQ7eooNB
 github.com/lestrrat-go/option v1.0.1/go.mod h1:5ZHFbivi4xwXxhxY9XHDe2FHo6/Z7WWmtT7T5nBBp3I=
 github.com/mailru/easyjson v0.7.7 h1:UGYAvKxe3sBsEDzO8ZeWOSlIQfWFlxbzLZe7hwFURr0=
 github.com/mailru/easyjson v0.7.7/go.mod h1:xzfreul335JAWq5oZzymOObrkdz5UnU4kGfJJLY9Nlc=
-github.com/metal-stack/go-hal v0.5.5-0.20240930121737-4436f2bc9418 h1:6/ZxmMCAfsYB1lVDDGxn8w6MMcfdEkDHP/XRA4RpAls=
-github.com/metal-stack/go-hal v0.5.5-0.20240930121737-4436f2bc9418/go.mod h1:2yeab7N8ApBd44z7mEwWCb+CL7o3ioZu41kSsra50Dw=
+github.com/metal-stack/go-hal v0.5.5-0.20241002054440-581f53c7bf01 h1:sk+Wm5Z9VniJErwPGl5ziS+g5WKD7j6gb/U5SpyUHsc=
+github.com/metal-stack/go-hal v0.5.5-0.20241002054440-581f53c7bf01/go.mod h1:2yeab7N8ApBd44z7mEwWCb+CL7o3ioZu41kSsra50Dw=
 github.com/metal-stack/metal-go v0.37.1-0.20241001061321-b6fa718f2176 h1:QRHcudgrKQtVzyVFlsyjkJO9EQwUM0/dhbOs6PhSNaw=
 github.com/metal-stack/metal-go v0.37.1-0.20241001061321-b6fa718f2176/go.mod h1:MQN5ni2Gzu+x2sdk8blbh7elQD1W1vaf0E+RkiV2aoo=
 github.com/metal-stack/metal-lib v0.18.3 h1:bovFiJPB9SMvuGLqcXVWz6jFB8HrdzwnCX7TFlen4r0=
