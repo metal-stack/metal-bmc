@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
+	"os"
+	"strings"
 
 	"github.com/metal-stack/metal-bmc/internal/bmc"
 	"github.com/metal-stack/metal-bmc/pkg/config"
@@ -11,8 +14,6 @@ import (
 	"github.com/metal-stack/v"
 
 	"github.com/kelseyhightower/envconfig"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 func main() {
@@ -25,59 +26,57 @@ func main() {
 		panic(fmt.Errorf("bad configuration: %w", err))
 	}
 
-	level, err := zap.ParseAtomicLevel(cfg.LogLevel)
-	if err != nil {
-		panic(fmt.Errorf("can't initialize zap logger: %w", err))
+	level := slog.LevelInfo
+	switch strings.ToLower(cfg.LogLevel) {
+	case "debug":
+		level = slog.LevelDebug
+	case "error":
+		level = slog.LevelError
+	case "warn":
+		level = slog.LevelWarn
 	}
 
-	zcfg := zap.NewProductionConfig()
-	zcfg.EncoderConfig.TimeKey = "timestamp"
-	zcfg.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
-	zcfg.Level = level
+	jsonHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: level,
+	})
+	log := slog.New(jsonHandler)
 
-	l, err := zcfg.Build()
-	if err != nil {
-		panic(fmt.Errorf("can't initialize zap logger: %w", err))
-	}
-
-	log := l.Sugar()
-	log.Infow("running app version", "version", v.V.String())
-	log.Infow("configuration", "config", cfg)
+	log.Info("running app version", "version", v.V.String())
+	log.Info("configuration", "config", cfg)
 
 	client, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey, metalgo.AuthType("Metal-Edit"))
 	if err != nil {
-		log.Fatalw("unable to create metal-api client", "error", err)
+		log.Error("unable to create metal-api client", "error", err)
+		panic(err)
 	}
 
 	// BMC Events via NSQ
-	b := bmc.New(bmc.Config{
-		Log:              log,
-		MQAddress:        cfg.MQAddress,
-		MQCACertFile:     cfg.MQCACertFile,
-		MQClientCertFile: cfg.MQClientCertFile,
-		MQLogLevel:       cfg.MQLogLevel,
-		MachineTopic:     cfg.MachineTopic,
-		MachineTopicTTL:  cfg.MachineTopicTTL,
-	})
+	b := bmc.New(log, &cfg)
 
 	err = b.InitConsumer()
 	if err != nil {
-		log.Fatalw("unable to create bmc service", "error", err)
+		log.Error("unable to create bmc service", "error", err)
+		panic(err)
 	}
 
 	// BMC Console access
-	console, err := bmc.NewConsole(log, client, cfg.ConsoleCACertFile, cfg.ConsoleCertFile, cfg.ConsoleKeyFile, cfg.ConsolePort)
+	console, err := bmc.NewConsole(log, client, cfg)
 	if err != nil {
-		log.Fatalw("unable to create bmc console", "error", err)
+		log.Error("unable to create bmc console", "error", err)
+		panic(err)
 	}
 	go func() {
-		log.Fatal(console.ListenAndServe())
+		err := console.ListenAndServe()
+		if err != nil {
+			panic(err)
+		}
 	}()
 
 	// Report IPMI Details
 	r, err := reporter.New(log, &cfg, client)
 	if err != nil {
-		log.Fatalw("could not start reporter", "error", err)
+		log.Error("could not start reporter", "error", err)
+		panic(err)
 	}
 
 	r.Run()

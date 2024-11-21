@@ -2,47 +2,39 @@ package bmc
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/metal-stack/go-hal"
 	"github.com/metal-stack/go-hal/connect"
-	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
-
-	"go.uber.org/zap"
+	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
+	"github.com/metal-stack/metal-bmc/pkg/config"
 )
 
 type BMCService struct {
-	log *zap.SugaredLogger
+	log *slog.Logger
 	// NSQ related config options
-	mqAddress        string
-	mqCACertFile     string
-	mqClientCertFile string
-	mqLogLevel       string
-	machineTopic     string
-	machineTopicTTL  time.Duration
+	mqAddress           string
+	mqCACertFile        string
+	mqClientCertFile    string
+	mqClientCertKeyFile string
+	mqLogLevel          string
+	machineTopic        string
+	machineTopicTTL     time.Duration
 }
 
-type Config struct {
-	Log              *zap.SugaredLogger
-	MQAddress        string
-	MQCACertFile     string
-	MQClientCertFile string
-	MQLogLevel       string
-	MachineTopic     string
-	MachineTopicTTL  time.Duration
-}
-
-func New(c Config) *BMCService {
+func New(log *slog.Logger, c *config.Config) *BMCService {
 	b := &BMCService{
-		log:              c.Log,
-		mqAddress:        c.MQAddress,
-		mqCACertFile:     c.MQCACertFile,
-		mqClientCertFile: c.MQClientCertFile,
-		mqLogLevel:       c.MQLogLevel,
-		machineTopic:     c.MachineTopic,
-		machineTopicTTL:  c.MachineTopicTTL,
+		log:                 log,
+		mqAddress:           c.MQAddress,
+		mqCACertFile:        c.MQCACertFile,
+		mqClientCertFile:    c.MQClientCertFile,
+		mqClientCertKeyFile: c.MQClientCertKeyFile,
+		mqLogLevel:          c.MQLogLevel,
+		machineTopic:        c.MachineTopic,
+		machineTopicTTL:     c.MachineTopicTTL,
 	}
 	return b
 }
@@ -114,7 +106,7 @@ func (b *BMCService) outBand(ipmi *IPMI) (hal.OutBand, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert port to an int %w", err)
 	}
-	outBand, err := connect.OutBand(host, port, ipmi.User, ipmi.Password, halzap.New(b.log))
+	outBand, err := connect.OutBand(host, port, ipmi.User, ipmi.Password, halslog.New(b.log))
 	if err != nil {
 		return nil, err
 	}

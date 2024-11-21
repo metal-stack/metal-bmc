@@ -1,4 +1,4 @@
-FROM golang:1.21 as builder
+FROM golang:1.23 as builder
 WORKDIR /work
 COPY . .
 RUN make
@@ -22,6 +22,6 @@ RUN apt update \
 # ADD https://www.iana.org/assignments/enterprise-numbers.txt /usr/share/misc/enterprise-numbers.txt 
 
 COPY --from=builder /work/bin/metal-bmc /
-COPY --from=r.metal-stack.io/metal/supermicro:2.11.0 /usr/bin/sum /usr/bin/sum
+COPY --from=r.metal-stack.io/metal/supermicro:2.14.0 /usr/bin/sum /usr/bin/sum
 
 CMD ["/metal-bmc"]

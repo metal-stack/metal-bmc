@@ -1,10 +1,10 @@
 package leases
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/metal-stack/metal-go/api/models"
-	"go.uber.org/zap"
 )
 
 type Lease struct {
@@ -18,12 +18,13 @@ type Leases []Lease
 
 type ReportItem struct {
 	Lease
-	Log          *zap.SugaredLogger
-	UUID         *string
-	BmcVersion   *string
-	BiosVersion  *string
-	FRU          *models.V1MachineFru
-	Powerstate   *string
-	IndicatorLED *string
-	PowerMetric  *models.V1PowerMetric
+	Log           *slog.Logger
+	UUID          *string
+	BmcVersion    *string
+	BiosVersion   *string
+	FRU           *models.V1MachineFru
+	Powerstate    *string
+	IndicatorLED  *string
+	PowerMetric   *models.V1PowerMetric
+	PowerSupplies []*models.V1PowerSupply
 }
