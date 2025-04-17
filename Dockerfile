@@ -1,11 +1,11 @@
-FROM golang:1.24 as builder
+FROM golang:1.24 AS builder
 WORKDIR /work
 COPY . .
 RUN make
 
 # we must stay at debian-11 because otherwise ipmitool v1.18.19 will be installed which is broken
 # see comment below
-FROM debian:12-slim
+FROM debian:11-slim
 
 RUN apt update \
  && apt install --yes --no-install-recommends \
