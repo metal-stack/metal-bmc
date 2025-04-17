@@ -17,7 +17,7 @@ type Lease struct {
 type Leases []Lease
 
 type ReportItem struct {
-	Lease
+	Lease         Lease
 	Log           *slog.Logger
 	UUID          *string
 	BmcVersion    *string
