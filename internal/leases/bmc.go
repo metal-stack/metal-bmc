@@ -8,9 +8,9 @@ import (
 )
 
 func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword string) error {
-	ob, err := connect.OutBand(i.Ip, ipmiPort, ipmiUser, ipmiPassword, halslog.New(i.Log))
+	ob, err := connect.OutBand(i.Lease.Ip, ipmiPort, ipmiUser, ipmiPassword, halslog.New(i.Log))
 	if err != nil {
-		i.Log.Error("could not establish outband connection to device bmc", "mac", i.Mac, "ip", i.Ip, "err", err)
+		i.Log.Error("could not establish outband connection to device bmc", "mac", i.Lease.Mac, "ip", i.Lease.Ip, "err", err)
 		return err
 	}
 
@@ -28,7 +28,7 @@ func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword s
 			ProductSerial:       bmcDetails.ProductSerial,
 		}
 	} else {
-		i.Log.Warn("could not retrieve bmc details of device", "mac", i.Mac, "ip", i.Ip, "err", err)
+		i.Log.Warn("could not retrieve bmc details of device", "mac", i.Lease.Mac, "ip", i.Lease.Ip, "err", err)
 		return err
 	}
 
@@ -68,7 +68,7 @@ func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword s
 		str := u.String()
 		i.UUID = &str
 	} else {
-		i.Log.Warn("could not determine uuid of device", "mac", i.Mac, "ip", i.Ip, "err", err)
+		i.Log.Warn("could not determine uuid of device", "mac", i.Lease.Mac, "ip", i.Lease.Ip, "err", err)
 		return err
 	}
 	return nil

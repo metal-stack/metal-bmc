@@ -76,7 +76,6 @@ func (r reporter) collectAndReport() error {
 
 	var items []*leases.ReportItem
 	for _, l := range byMac {
-		l := l
 		if !r.isInAllowedCidr(l.Ip) {
 			continue
 		}
@@ -97,7 +96,6 @@ func (r reporter) collectAndReport() error {
 	// Allow 20 goroutines run in parallel at max
 	g.SetLimit(20)
 	for _, item := range items {
-		item := item
 		g.Go(func() error {
 			return item.EnrichWithBMCDetails(r.cfg.IpmiPort, r.cfg.IpmiUser, r.cfg.IpmiPassword)
 		})
@@ -142,12 +140,12 @@ func (r reporter) report(items []*leases.ReportItem) error {
 	for _, item := range items {
 		item := item
 		if item.UUID == nil {
-			r.log.Error("could not determine uuid of device", "mac", item.Mac, "ip", item.Ip)
+			r.log.Error("could not determine uuid of device", "mac", item.Lease.Mac, "ip", item.Lease.Ip)
 			continue
 		}
 
 		report := models.V1MachineIpmiReport{
-			BMCIP:             &item.Ip,
+			BMCIP:             &item.Lease.Ip,
 			BMCVersion:        item.BmcVersion,
 			BIOSVersion:       item.BiosVersion,
 			FRU:               item.FRU,
