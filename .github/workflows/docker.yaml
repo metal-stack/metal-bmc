@@ -46,8 +46,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: |
-          metal-stack/metal-bmc
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr
