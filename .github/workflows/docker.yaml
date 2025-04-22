@@ -41,16 +41,21 @@ jobs:
       uses: golangci/golangci-lint-action@v7
       with:
         args: --build-tags integration -D protogetter --timeout=3m
-
-    - name: Make tag
-      run: |
-        [ "${GITHUB_EVENT_NAME}" == 'pull_request' ] && echo "tag=${GITHUB_HEAD_REF##*/}" >> $GITHUB_ENV || true
-        [ "${GITHUB_EVENT_NAME}" == 'release' ] && echo "tag=${GITHUB_REF##*/}" >> $GITHUB_ENV || true
-        [ "${GITHUB_EVENT_NAME}" == 'push' ] && echo "tag=latest" >> $GITHUB_ENV || true
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
 
     - name: Build and push image
       uses: docker/build-push-action@v6
       with:
         context: .
         push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.tag }}
+        tags: ${{ steps.meta.outputs.tags }}
