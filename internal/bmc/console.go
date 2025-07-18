@@ -6,7 +6,6 @@ import (
 	"io"
 	"log/slog"
 	"net"
-	"os"
 	"strconv"
 	"strings"
 
@@ -17,32 +16,20 @@ import (
 	"github.com/metal-stack/metal-go/api/client/machine"
 
 	"github.com/gliderlabs/ssh"
-	gossh "golang.org/x/crypto/ssh"
 )
 
 type console struct {
-	log     *slog.Logger
-	port    int
-	hostKey gossh.Signer
-	client  metalgo.Client
+	log    *slog.Logger
+	port   int
+	client metalgo.Client
 }
 
 func NewConsole(log *slog.Logger, client metalgo.Client, c config.Config) (*console, error) {
 
-	bb, err := os.ReadFile(c.ConsoleKeyFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load ssh server key:%w", err)
-	}
-	hostKey, err := gossh.ParsePrivateKey(bb)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse ssh server key:%w", err)
-	}
-
 	return &console{
-		log:     log,
-		port:    c.ConsolePort,
-		hostKey: hostKey,
-		client:  client,
+		log:    log,
+		port:   c.ConsolePort,
+		client: client,
 	}, nil
 }
 
@@ -51,7 +38,6 @@ func (c *console) ListenAndServe() error {
 	s := &ssh.Server{
 		Handler: c.sessionHandler,
 	}
-	s.AddHostKey(c.hostKey)
 	addr := fmt.Sprintf(":%d", c.port)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
