@@ -1,12 +1,11 @@
 package bmc
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -22,34 +21,13 @@ import (
 )
 
 type console struct {
-	log       *slog.Logger
-	tlsConfig *tls.Config
-	port      int
-	hostKey   gossh.Signer
-	client    metalgo.Client
+	log     *slog.Logger
+	port    int
+	hostKey gossh.Signer
+	client  metalgo.Client
 }
 
 func NewConsole(log *slog.Logger, client metalgo.Client, c config.Config) (*console, error) {
-
-	caCert, err := os.ReadFile(c.ConsoleCACertFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load cert: %w", err)
-	}
-
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-
-	cert, err := tls.LoadX509KeyPair(c.ConsoleCertFile, c.ConsoleKeyFile)
-	if err != nil {
-		return nil, err
-	}
-
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{cert},        // server certificate which is validated by the client
-		ClientCAs:    caCertPool,                     // used to verify the client cert is signed by the CA and is therefore valid
-		ClientAuth:   tls.RequireAndVerifyClientCert, // this requires a valid client certificate to be supplied during handshake
-		MinVersion:   tls.VersionTLS13,
-	}
 
 	bb, err := os.ReadFile(c.ConsoleKeyFile)
 	if err != nil {
@@ -61,11 +39,10 @@ func NewConsole(log *slog.Logger, client metalgo.Client, c config.Config) (*cons
 	}
 
 	return &console{
-		log:       log,
-		tlsConfig: tlsConfig,
-		port:      c.ConsolePort,
-		hostKey:   hostKey,
-		client:    client,
+		log:     log,
+		port:    c.ConsolePort,
+		hostKey: hostKey,
+		client:  client,
 	}, nil
 }
 
@@ -76,7 +53,7 @@ func (c *console) ListenAndServe() error {
 	}
 	s.AddHostKey(c.hostKey)
 	addr := fmt.Sprintf(":%d", c.port)
-	listener, err := tls.Listen("tcp", addr, c.tlsConfig)
+	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		return fmt.Errorf("failed to create listener: %w", err)
 	}
