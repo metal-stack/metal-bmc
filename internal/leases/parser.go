@@ -1,47 +1,80 @@
 package leases
 
 import (
+	"encoding/csv"
 	"errors"
-	"regexp"
+	"fmt"
+	"io"
+	"strconv"
+	"strings"
 	"time"
 )
 
-const (
-	leaseDateFormat = "2006/01/02 15:04:05"
-	leaseRegex      = `(?ms)lease\s+(?P<ip>[^\s]+)\s+{.*?starts\s\d+\s(?P<begin>[\d\/]+\s[\d\:]+);.*?ends\s\d+\s(?P<end>[\d\/]+\s[\d\:]+);.*?hardware\sethernet\s(?P<mac>[\w\:]+);.*?}`
-)
+func parse(r io.Reader) (Leases, error) {
+	reader := csv.NewReader(r)
 
-func parse(contents string) (Leases, error) {
-	leases := Leases{}
-	var re = regexp.MustCompile(leaseRegex)
-	matches := re.FindAllStringSubmatch(contents, -1)
-	var errs []error
-	for _, m := range matches {
-		rm := make(map[string]string)
-		for i, name := range re.SubexpNames() {
-			if i != 0 && name != "" {
-				rm[name] = m[i]
-			}
-		}
-		begin, err := time.Parse(leaseDateFormat, rm["begin"])
-		if err != nil {
-			errs = append(errs, err)
-		}
-		end, err := time.Parse(leaseDateFormat, rm["end"])
-		if err != nil {
-			errs = append(errs, err)
-		}
-
-		l := Lease{
-			Mac:   rm["mac"],
-			Ip:    rm["ip"],
-			Begin: begin,
-			End:   end,
-		}
-		leases = append(leases, l)
+	header, err := reader.Read()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read header: %w", err)
 	}
+
+	if len(header) < 5 || header[0] != "address" || header[1] != "hwaddr" {
+		return nil, fmt.Errorf("invalid Kea lease file format")
+	}
+
+	var leases Leases
+	var errs []error
+
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			line, _ := reader.FieldPos(0)
+			errs = append(errs, fmt.Errorf("line %d: failed to read CSV record: %v", line, err))
+			continue
+		}
+
+		if len(record) < 5 {
+			line, _ := reader.FieldPos(0)
+			errs = append(errs, fmt.Errorf("line %d: incomplete record, expected at least 5 fields, got %d", line, len(record)))
+			continue
+		}
+
+		expireStr := strings.TrimSpace(record[4])
+		expireTs, err := strconv.ParseInt(expireStr, 10, 64)
+		if err != nil {
+			line, col := reader.FieldPos(4)
+			errs = append(errs, fmt.Errorf("line %d, column %d: invalid expire timestamp '%s': %v", line, col, expireStr, err))
+			continue
+		}
+
+		ip := strings.TrimSpace(record[0])
+		if ip == "" {
+			line, col := reader.FieldPos(0)
+			errs = append(errs, fmt.Errorf("line %d, column %d: empty Ip address", line, col))
+			continue
+		}
+
+		mac := strings.TrimSpace(record[1])
+		if mac == "" {
+			line, col := reader.FieldPos(1)
+			errs = append(errs, fmt.Errorf("line %d, column %d: empty Mac address", line, col))
+			continue
+		}
+
+		lease := Lease{
+			Mac: mac,
+			Ip:  ip,
+			End: time.Unix(expireTs, 0),
+		}
+		leases = append(leases, lease)
+	}
+
 	if len(errs) > 0 {
 		return leases, errors.Join(errs...)
 	}
+
 	return leases, nil
 }
