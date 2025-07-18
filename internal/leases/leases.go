@@ -34,6 +34,8 @@ func ReadLeases(filename string) (Leases, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 	return parse(file)
 }
