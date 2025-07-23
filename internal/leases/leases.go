@@ -29,10 +29,13 @@ func (l Leases) LatestByMac() map[string]Lease {
 	return byMac
 }
 
-func ReadLeases(leaseFile string) (Leases, error) {
-	leasesContent, err := os.ReadFile(leaseFile)
+func ReadLeases(filename string) (Leases, error) {
+	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
-	return parse(string(leasesContent))
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
+	return parse(file)
 }

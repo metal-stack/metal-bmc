@@ -1,6 +1,7 @@
 package leases
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -8,51 +9,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var sampleLeaseContent = `
-lease 192.168.2.27 {
-	starts 4 2019/06/27 13:30:21;
-	ends 4 2019/06/27 13:40:21;
-	cltt 4 2019/06/27 13:30:21;
-	binding state active;
-	next binding state free;
-	rewind binding state free;
-	hardware ethernet ac:1f:6b:35:ac:62;
-	uid "\001\254\037k5\254b";
-	set vendor-class-identifier = "udhcp 1.23.1";
-}
-lease 192.168.2.30 {
-	starts 4 2019/06/27 06:40:06;
-	ends 4 2019/06/27 06:50:06;
-	cltt 4 2019/06/27 06:40:06;
-	binding state active;
-	next binding state free;
-	rewind binding state free;
-	hardware ethernet ac:1f:6b:35:ab:2d;
-	uid "\001\254\037k5\253-";
-	set vendor-class-identifier = "udhcp 1.23.1";
-}
+var sampleLeaseContent = `address,hwaddr,client_id,valid_lifetime,expire,subnet_id,fqdn_fwd,fqdn_rev,hostname,state,user_context
+192.168.2.27,ac:1f:6b:35:ac:62,01:ac:1f:6b:35:ac:62,3600,1593243021,1,0,0,,1,
+192.168.2.30,ac:1f:6b:35:ab:2d,01:ac:1f:6b:35:ab:2d,3600,1593243006,1,0,0,,1,
 `
 
 func TestParse(t *testing.T) {
-	l, err := parse(sampleLeaseContent)
+	l, err := parse(strings.NewReader(sampleLeaseContent))
 	require.NoError(t, err)
 
-	b, _ := time.Parse(leaseDateFormat, "2019/06/27 13:30:21")
-	e, _ := time.Parse(leaseDateFormat, "2019/06/27 13:40:21")
 	lease1 := Lease{
-		Mac:   "ac:1f:6b:35:ac:62",
-		Ip:    "192.168.2.27",
-		Begin: b,
-		End:   e,
+		Mac: "ac:1f:6b:35:ac:62",
+		Ip:  "192.168.2.27",
+		End: time.Unix(1593243021, 0),
 	}
 
-	b, _ = time.Parse(leaseDateFormat, "2019/06/27 06:40:06")
-	e, _ = time.Parse(leaseDateFormat, "2019/06/27 06:50:06")
 	lease2 := Lease{
-		Mac:   "ac:1f:6b:35:ab:2d",
-		Ip:    "192.168.2.30",
-		Begin: b,
-		End:   e,
+		Mac: "ac:1f:6b:35:ab:2d",
+		Ip:  "192.168.2.30",
+		End: time.Unix(1593243006, 0),
 	}
 
 	assert.Equal(t, Leases{lease1, lease2}, l)
