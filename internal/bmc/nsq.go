@@ -101,7 +101,11 @@ func (b *BMCService) HandleMessage(message *nsq.Message) error {
 			}
 			return outBand.PowerCycle()
 		case ChassisIdentifyLEDOnCmd:
-			return outBand.IdentifyLEDOn()
+			err := outBand.IdentifyLEDOn()
+			if err != nil {
+				return err
+			}
+			return nil
 		case ChassisIdentifyLEDOffCmd:
 			return outBand.IdentifyLEDOff()
 		case UpdateFirmwareCmd:
