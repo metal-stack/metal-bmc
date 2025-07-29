@@ -5,7 +5,7 @@ go 1.24
 require (
 	github.com/gliderlabs/ssh v0.3.8
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/metal-stack/go-hal v0.5.9-0.20250729073048-813ca3c79c44
+	github.com/metal-stack/go-hal v0.5.9-0.20250729081720-2ee4e80d5719
 	github.com/metal-stack/metal-go v0.41.1
 	github.com/metal-stack/v v1.0.3
 	github.com/nsqio/go-nsq v1.1.0
