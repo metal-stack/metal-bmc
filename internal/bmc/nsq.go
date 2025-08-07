@@ -113,7 +113,9 @@ func (b *BMCService) HandleMessage(message *nsq.Message) error {
 		default:
 			b.log.Error("unhandled command", "topic", b.machineTopic, "channel", "core", "event", event)
 		}
-	case Create, Update:
+	case Create:
+		return outBand.BootFrom(hal.BootTargetDisk)
+	case Update:
 		fallthrough
 	default:
 		b.log.Warn("unhandled event", "topic", b.machineTopic, "channel", "core", "event", event)
