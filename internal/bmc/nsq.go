@@ -1,15 +1,13 @@
 package bmc
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"os"
 	"time"
 
-	"github.com/metal-stack/go-hal"
 	"github.com/nsqio/go-nsq"
+
+	"github.com/metal-stack/go-hal"
 )
 
 const (
@@ -17,35 +15,7 @@ const (
 )
 
 func (b *BMCService) InitConsumer() error {
-	caCertRaw, err := os.ReadFile(b.mqCACertFile)
-	if err != nil {
-		return fmt.Errorf("failed to read ca cert: %w", err)
-	}
-
-	caCertPool, err := x509.SystemCertPool()
-	if err != nil {
-		return err
-	}
-
-	ok := caCertPool.AppendCertsFromPEM(caCertRaw)
-	if !ok {
-		return fmt.Errorf("unable to add ca to cert pool")
-	}
-
-	cert, err := tls.LoadX509KeyPair(b.mqClientCertFile, b.mqClientCertKeyFile)
-	if err != nil {
-		return err
-	}
-
 	config := nsq.NewConfig()
-	config.TlsConfig = &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		ClientCAs:    caCertPool,
-		RootCAs:      caCertPool,
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		MinVersion:   tls.VersionTLS12,
-	}
-	config.TlsV1 = true
 
 	// Deadlines for network reads and writes
 	config.ReadTimeout = 10 * time.Second
@@ -131,7 +101,11 @@ func (b *BMCService) HandleMessage(message *nsq.Message) error {
 			}
 			return outBand.PowerCycle()
 		case ChassisIdentifyLEDOnCmd:
-			return outBand.IdentifyLEDOn()
+			err := outBand.IdentifyLEDOn()
+			if err != nil {
+				return err
+			}
+			return nil
 		case ChassisIdentifyLEDOffCmd:
 			return outBand.IdentifyLEDOff()
 		case UpdateFirmwareCmd:

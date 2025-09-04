@@ -8,10 +8,9 @@ import (
 )
 
 type Lease struct {
-	Mac   string
-	Ip    string
-	Begin time.Time
-	End   time.Time
+	Mac string
+	Ip  string
+	End time.Time
 }
 
 type Leases []Lease
