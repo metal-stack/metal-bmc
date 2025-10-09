@@ -1,6 +1,7 @@
 package bmc
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -11,11 +12,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/metal-stack/go-hal/connect"
+	"connectrpc.com/connect"
+	apiclient "github.com/metal-stack/api/go/client"
+	adminv2 "github.com/metal-stack/api/go/metalstack/admin/v2"
+	halconnect "github.com/metal-stack/go-hal/connect"
 	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
 	"github.com/metal-stack/metal-bmc/pkg/config"
-	metalgo "github.com/metal-stack/metal-go"
-	"github.com/metal-stack/metal-go/api/client/machine"
 
 	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
@@ -26,10 +28,10 @@ type console struct {
 	tlsConfig *tls.Config
 	port      int
 	hostKey   gossh.Signer
-	client    metalgo.Client
+	client    apiclient.Client
 }
 
-func NewConsole(log *slog.Logger, client metalgo.Client, c config.Config) (*console, error) {
+func NewConsole(log *slog.Logger, client apiclient.Client, c config.Config) (*console, error) {
 
 	caCert, err := os.ReadFile(c.ConsoleCACertFile)
 	if err != nil {
@@ -89,11 +91,12 @@ func (c *console) sessionHandler(s ssh.Session) {
 	c.log.Info("ssh session handler called", "machineID", s.User())
 	machineID := s.User()
 
-	resp, err := c.client.Machine().FindIPMIMachine(machine.NewFindIPMIMachineParams().WithID(machineID), nil)
-	if err != nil || resp.Payload == nil || resp.Payload.Ipmi == nil {
+	resp, err := c.client.Adminv2().Machine().Get(context.Background(), connect.NewRequest(&adminv2.MachineServiceGetRequest{Uuid: machineID}))
+	if err != nil {
 		c.log.Error("failed to receive IPMI data", "machineID", machineID, "error", err)
 		return
 	}
+	resp.Msg.Machine.
 	metalIPMI := resp.Payload.Ipmi
 
 	c.log.Info("connection to", "machineID", machineID)
@@ -121,7 +124,7 @@ func (c *console) sessionHandler(s ssh.Session) {
 		return
 	}
 
-	ob, err := connect.OutBand(host, port, *metalIPMI.User, *metalIPMI.Password, halslog.New(c.log))
+	ob, err := halconnect.OutBand(host, port, *metalIPMI.User, *metalIPMI.Password, halslog.New(c.log))
 	if err != nil {
 		c.log.Error("failed to out-band connect", "host", host, "port", port, "machineID", machineID, "ipmiuser", *metalIPMI.User)
 		return

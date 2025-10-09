@@ -10,6 +10,11 @@ import (
 	"syscall"
 	"time"
 
+
+	"connectrpc.com/connect"
+	apiclient "github.com/metal-stack/api/go/client"
+	adminv2 "github.com/metal-stack/api/go/metalstack/admin/v2"
+
 	"github.com/metal-stack/metal-bmc/internal/leases"
 	"github.com/metal-stack/metal-bmc/pkg/config"
 	metalgo "github.com/metal-stack/metal-go"
@@ -23,12 +28,12 @@ import (
 type reporter struct {
 	cfg    *config.Config
 	log    *slog.Logger
-	client metalgo.Client
+	client apiclient.Client
 	sem    *semaphore.Weighted
 }
 
 // New will create a reporter for MachineIpmiReports
-func New(log *slog.Logger, cfg *config.Config, client metalgo.Client) (*reporter, error) {
+func New(log *slog.Logger, cfg *config.Config, client apiclient.Client) (*reporter, error) {
 	return &reporter{
 		cfg:    cfg,
 		log:    log,
