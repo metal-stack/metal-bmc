@@ -10,14 +10,10 @@ import (
 	"syscall"
 	"time"
 
-
-	"connectrpc.com/connect"
 	apiclient "github.com/metal-stack/api/go/client"
-	adminv2 "github.com/metal-stack/api/go/metalstack/admin/v2"
 
 	"github.com/metal-stack/metal-bmc/internal/leases"
 	"github.com/metal-stack/metal-bmc/pkg/config"
-	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
 	"golang.org/x/sync/errgroup"

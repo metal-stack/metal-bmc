@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 
-	"connectrpc.com/connect"
 	apiclient "github.com/metal-stack/api/go/client"
 	adminv2 "github.com/metal-stack/api/go/metalstack/admin/v2"
 	halconnect "github.com/metal-stack/go-hal/connect"
@@ -91,13 +90,13 @@ func (c *console) sessionHandler(s ssh.Session) {
 	c.log.Info("ssh session handler called", "machineID", s.User())
 	machineID := s.User()
 
-	resp, err := c.client.Adminv2().Machine().Get(context.Background(), connect.NewRequest(&adminv2.MachineServiceGetRequest{Uuid: machineID}))
+	resp, err := c.client.Adminv2().Machine().Get(context.Background(), &adminv2.MachineServiceGetRequest{Uuid: machineID})
 	if err != nil {
 		c.log.Error("failed to receive IPMI data", "machineID", machineID, "error", err)
 		return
 	}
 	resp.Msg.Machine.
-	metalIPMI := resp.Payload.Ipmi
+		metalIPMI := resp.Payload.Ipmi
 
 	c.log.Info("connection to", "machineID", machineID)
 	if metalIPMI == nil {
