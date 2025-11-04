@@ -12,7 +12,7 @@ type Config struct {
 	PartitionID string `required:"true" desc:"set the partition ID" envconfig:"partition_id"`
 
 	// ipmi details reporting parameters
-	LeaseFile       string        `required:"false" default:"/var/lib/dhcp/dhcpd.leases" desc:"the dhcp lease file to read" split_words:"true"`
+	LeaseFile       string        `required:"false" default:"/var/lib/kea/kea-leases.csv" desc:"the dhcp lease file to read" split_words:"true"`
 	ReportInterval  time.Duration `required:"false" default:"5m" desc:"the interval for periodical reports" split_words:"true"`
 	MetalAPIURL     *url.URL      `required:"true" desc:"endpoint for the metal-api" envconfig:"metal_api_url"`
 	MetalAPIHMACKey string        `required:"true" desc:"the preshared key for the hmac calculation" envconfig:"metal_api_hmac_key"`

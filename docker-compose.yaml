@@ -8,11 +8,10 @@ services:
     image: metalstack/metal-bmc:latest
     network_mode: host
     volumes:
-      - ${PWD}/dhcpd.leases:/dhcpd.leases
+      - ${PWD}/kea-leases.csv:/kea-leases.csv
     environment:
-      METAL_BMC_LEASE_FILE: /dhcpd.leases
+      METAL_BMC_LEASE_FILE: /kea-leases.csv
       METAL_BMC_PARTITION_ID: partition
       METAL_BMC_METAL_API_URL: http://localhost:8080
       METAL_BMC_METAL_API_HMAC_KEY: test
       METAL_BMC_IGNORE_MACS: "aa:aa:aa:aa:aa:aa"
-
