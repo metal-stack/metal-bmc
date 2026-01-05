@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/metal-stack/metal-go/api/models"
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 )
 
 type Lease struct {
@@ -22,9 +22,9 @@ type ReportItem struct {
 	UUID          *string
 	BmcVersion    *string
 	BiosVersion   *string
-	FRU           *models.V1MachineFru
+	FRU           *apiv2.MachineFRU
 	Powerstate    *string
 	IndicatorLED  *string
-	PowerMetric   *models.V1PowerMetric
-	PowerSupplies []*models.V1PowerSupply
+	PowerMetric   *apiv2.MachinePowerMetric
+	PowerSupplies []*apiv2.MachinePowerSupply
 }

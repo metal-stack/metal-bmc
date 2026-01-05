@@ -1,6 +1,7 @@
 package reporter
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/netip"
@@ -11,11 +12,12 @@ import (
 	"time"
 
 	apiclient "github.com/metal-stack/api/go/client"
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
+	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
+	"github.com/metal-stack/metal-lib/pkg/pointer"
 
 	"github.com/metal-stack/metal-bmc/internal/leases"
 	"github.com/metal-stack/metal-bmc/pkg/config"
-	"github.com/metal-stack/metal-go/api/client/machine"
-	"github.com/metal-stack/metal-go/api/models"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
 )
@@ -136,7 +138,7 @@ func (r reporter) isInAllowedCidr(ip string) bool {
 // report will send all gathered information about machines to the metal-api
 func (r reporter) report(items []*leases.ReportItem) error {
 	partitionID := r.cfg.PartitionID
-	reports := make(map[string]models.V1MachineIpmiReport)
+	reports := make(map[string]*apiv2.MachineBMCReport)
 
 	for _, item := range items {
 		item := item
@@ -145,34 +147,34 @@ func (r reporter) report(items []*leases.ReportItem) error {
 			continue
 		}
 
-		report := models.V1MachineIpmiReport{
-			BMCIP:             &item.Lease.Ip,
-			BMCVersion:        item.BmcVersion,
-			BIOSVersion:       item.BiosVersion,
-			FRU:               item.FRU,
-			PowerState:        item.Powerstate,
-			IndicatorLEDState: item.IndicatorLED,
-			PowerMetric:       item.PowerMetric,
-			PowerSupplies:     item.PowerSupplies,
+		report := &apiv2.MachineBMCReport{
+			Bmc: &apiv2.MachineBMC{
+				// FIXME
+				Address:    item.Lease.Ip + ":631",
+				Version:    pointer.SafeDeref(item.BmcVersion),
+				PowerState: pointer.SafeDeref(item.Powerstate),
+			},
+			Bios: &apiv2.MachineBios{
+				Version: pointer.SafeDeref(item.BiosVersion),
+			},
+			Fru:           item.FRU,
+			PowerMetric:   item.PowerMetric,
+			LedState:      &apiv2.MachineChassisIdentifyLEDState{Value: pointer.SafeDeref(item.IndicatorLED)},
+			PowerSupplies: item.PowerSupplies,
 		}
 		reports[*item.UUID] = report
 	}
 
-	mir := &models.V1MachineIpmiReports{
-		Partitionid: partitionID,
-		Reports:     reports,
-	}
-
-	ok, err := r.client.Machine().IpmiReport(machine.NewIpmiReportParams().WithBody(mir), nil)
+	ok, err := r.client.Infrav2().BMC().UpdateBMCInfo(context.Background(), &infrav2.UpdateBMCInfoRequest{Partition: partitionID, BmcReports: reports})
 	if err != nil {
 		return err
 	}
 
-	r.log.Info("updated ipmi information", "# of machines", len(ok.Payload.Updated))
-	for _, u := range ok.Payload.Updated {
+	r.log.Info("updated ipmi information", "# of machines", len(ok.UpdatedMachines))
+	for _, u := range ok.UpdatedMachines {
 		r.log.Info("ipmi information was updated for machine", "uuid", u)
 	}
-	for _, u := range ok.Payload.Created {
+	for _, u := range ok.CreatedMachines {
 		r.log.Info("ipmi information was set and machine was created", "uuid", u)
 	}
 

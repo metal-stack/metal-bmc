@@ -90,42 +90,36 @@ func (c *console) sessionHandler(s ssh.Session) {
 	c.log.Info("ssh session handler called", "machineID", s.User())
 	machineID := s.User()
 
-	resp, err := c.client.Adminv2().Machine().Get(context.Background(), &adminv2.MachineServiceGetRequest{Uuid: machineID})
+	resp, err := c.client.Adminv2().Machine().GetBMC(context.Background(), &adminv2.MachineServiceGetBMCRequest{Uuid: machineID})
 	if err != nil {
-		c.log.Error("failed to receive IPMI data", "machineID", machineID, "error", err)
+		c.log.Error("failed to receive BMC data", "machineID", machineID, "error", err)
 		return
 	}
-	resp.Msg.Machine.
-		metalIPMI := resp.Payload.Ipmi
 
-	c.log.Info("connection to", "machineID", machineID)
-	if metalIPMI == nil {
-		c.log.Error("failed to receive IPMI data", "machineID", machineID)
+	bmc := resp.Bmc.Bmc
+	if bmc.Address == "" {
+		c.log.Error("failed to receive BMC.Address data", "machineID", machineID)
 		return
 	}
-	if metalIPMI.Address == nil {
-		c.log.Error("failed to receive IPMI.Address data", "machineID", machineID)
-		return
-	}
-	_, err = io.WriteString(s, fmt.Sprintf("Connecting to console of %q (%s)\n", machineID, *metalIPMI.Address))
+	_, err = io.WriteString(s, fmt.Sprintf("Connecting to console of %q (%s)\n", machineID, bmc.Address))
 	if err != nil {
 		c.log.Warn("failed to write to console", "machineID", machineID)
 	}
 
-	host, portStr, found := strings.Cut(*metalIPMI.Address, ":")
+	host, portStr, found := strings.Cut(bmc.Address, ":")
 	if !found {
-		c.log.Error("invalid ipmi address", "address", *metalIPMI.Address)
+		c.log.Error("invalid ipmi address", "address", bmc.Address)
 		return
 	}
 	port, err := strconv.Atoi(portStr)
 	if err != nil {
-		c.log.Error("invalid port", "port", port, "address", *metalIPMI.Address)
+		c.log.Error("invalid port", "port", port, "address", bmc.Address)
 		return
 	}
 
-	ob, err := halconnect.OutBand(host, port, *metalIPMI.User, *metalIPMI.Password, halslog.New(c.log))
+	ob, err := halconnect.OutBand(host, port, bmc.User, bmc.Password, halslog.New(c.log))
 	if err != nil {
-		c.log.Error("failed to out-band connect", "host", host, "port", port, "machineID", machineID, "ipmiuser", *metalIPMI.User)
+		c.log.Error("failed to out-band connect", "host", host, "port", port, "machineID", machineID, "ipmiuser", bmc.User)
 		return
 	}
 
