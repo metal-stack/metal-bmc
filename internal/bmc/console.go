@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	apiclient "github.com/metal-stack/api/go/client"
-	adminv2 "github.com/metal-stack/api/go/metalstack/admin/v2"
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	halconnect "github.com/metal-stack/go-hal/connect"
 	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
 	"github.com/metal-stack/metal-bmc/pkg/config"
@@ -90,7 +90,7 @@ func (c *console) sessionHandler(s ssh.Session) {
 	c.log.Info("ssh session handler called", "machineID", s.User())
 	machineID := s.User()
 
-	resp, err := c.client.Adminv2().Machine().GetBMC(context.Background(), &adminv2.MachineServiceGetBMCRequest{Uuid: machineID})
+	resp, err := c.client.Apiv2().Machine().GetBMC(context.Background(), &apiv2.MachineServiceGetBMCRequest{Uuid: machineID})
 	if err != nil {
 		c.log.Error("failed to receive BMC data", "machineID", machineID, "error", err)
 		return
