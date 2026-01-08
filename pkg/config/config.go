@@ -12,15 +12,15 @@ type Config struct {
 	PartitionID string `required:"true" desc:"set the partition ID" envconfig:"partition_id"`
 
 	// ipmi details reporting parameters
-	LeaseFile       string        `required:"false" default:"/var/lib/dhcp/dhcpd.leases" desc:"the dhcp lease file to read" split_words:"true"`
-	ReportInterval  time.Duration `required:"false" default:"5m" desc:"the interval for periodical reports" split_words:"true"`
-	MetalAPIURL     *url.URL      `required:"true" desc:"endpoint for the metal-api" envconfig:"metal_api_url"`
-	MetalAPIHMACKey string        `required:"true" desc:"the preshared key for the hmac calculation" envconfig:"metal_api_hmac_key"`
-	IpmiPort        int           `required:"false" default:"623" desc:"the ipmi port" split_words:"true"`
-	IpmiUser        string        `required:"false" default:"ADMIN" desc:"the ipmi user" split_words:"true"`
-	IpmiPassword    string        `required:"false" default:"ADMIN" desc:"the ipmi password" split_words:"true"`
-	IgnoreMacs      []string      `required:"false" desc:"mac addresses to ignore" split_words:"true"`
-	AllowedCidrs    []string      `required:"false" default:"0.0.0.0/0" desc:"filters dhcp leases" split_words:"true"`
+	LeaseFile           string        `required:"false" default:"/var/lib/dhcp/dhcpd.leases" desc:"the dhcp lease file to read" split_words:"true"`
+	ReportInterval      time.Duration `required:"false" default:"5m" desc:"the interval for periodical reports" split_words:"true"`
+	MetalAPIServerURL   *url.URL      `required:"true" desc:"endpoint for the metal-api" envconfig:"metal_apiserver_url"`
+	MetalAPIServerToken string        `required:"true" desc:"the preshared key for the hmac calculation" envconfig:"metal_apiserver_token"`
+	IpmiPort            int           `required:"false" default:"623" desc:"the ipmi port" split_words:"true"`
+	IpmiUser            string        `required:"false" default:"ADMIN" desc:"the ipmi user" split_words:"true"`
+	IpmiPassword        string        `required:"false" default:"ADMIN" desc:"the ipmi password" split_words:"true"`
+	IgnoreMacs          []string      `required:"false" desc:"mac addresses to ignore" split_words:"true"`
+	AllowedCidrs        []string      `required:"false" default:"0.0.0.0/0" desc:"filters dhcp leases" split_words:"true"`
 
 	// NSQ connection parameters
 	MQAddress           string        `required:"false" default:"localhost:4150" desc:"set the nsqd server address" envconfig:"mq_address"`
