@@ -1,6 +1,7 @@
 package leases
 
 import (
+	"log/slog"
 	"testing"
 	"time"
 
@@ -19,6 +20,8 @@ lease 192.168.2.27 {
 	hardware ethernet ac:1f:6b:35:ac:62;
 	uid "\001\254\037k5\254b";
 	set vendor-class-identifier = "udhcp 1.23.1";
+	option agent.circuit-id "eqx-mu4-r02mgmtleaf:Eth6(Port6)";
+	option agent.remote-id "e0:01:a6:db:04:3f";
 }
 lease 192.168.2.30 {
 	starts 4 2019/06/27 06:40:06;
@@ -30,11 +33,13 @@ lease 192.168.2.30 {
 	hardware ethernet ac:1f:6b:35:ab:2d;
 	uid "\001\254\037k5\253-";
 	set vendor-class-identifier = "udhcp 1.23.1";
+	option agent.circuit-id "eqx-mu4-r02mgmtleaf:Eth6(Port6)";
+	option agent.remote-id "e0:01:a6:db:04:3f";
 }
 `
 
 func TestParse(t *testing.T) {
-	l, err := parse(sampleLeaseContent)
+	l, err := parseLeasesFile(slog.Default(), sampleLeaseContent)
 	require.NoError(t, err)
 
 	b, _ := time.Parse(leaseDateFormat, "2019/06/27 13:30:21")
