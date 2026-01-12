@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//go:embed dhcpd.leases
+//go:embed dhcpd.test.leases
 var leaseFile string
 
 func Test_reporter_getReportItems(t *testing.T) {
@@ -30,8 +30,8 @@ func Test_reporter_getReportItems(t *testing.T) {
 					Lease: leases.Lease{
 						Mac:   "00:00:00:00:00:01",
 						Ip:    "10.0.0.1",
-						Begin: time.Date(2026, 01, 8, 14, 44, 2, 0, time.UTC),
-						End:   time.Date(2026, 01, 10, 14, 44, 2, 0, time.UTC),
+						Begin: time.Date(2080, 01, 8, 14, 44, 2, 0, time.UTC),
+						End:   time.Date(2080, 01, 10, 14, 44, 2, 0, time.UTC),
 					},
 				},
 			},

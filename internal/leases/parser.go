@@ -24,6 +24,8 @@ func parseLeasesFile(log *slog.Logger, data string) (Leases, error) {
 			continue
 		}
 
+		line = strings.TrimSpace(line)
+
 		switch tokens[0] {
 		case "lease":
 			// lease 1.2.3.4 {
@@ -110,6 +112,10 @@ func parseLeasesFile(log *slog.Logger, data string) (Leases, error) {
 
 			current.Mac = strings.TrimRight(tokens[2], ";")
 		}
+	}
+
+	if current != nil {
+		return nil, fmt.Errorf("lease entry was not closed")
 	}
 
 	return leases, nil
