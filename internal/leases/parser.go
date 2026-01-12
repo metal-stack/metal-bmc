@@ -19,12 +19,12 @@ func parseLeasesFile(log *slog.Logger, data string) (Leases, error) {
 	)
 
 	for i, line := range strings.Split(data, "\n") {
+		line = strings.TrimSpace(line)
+
 		tokens := strings.Fields(line)
 		if len(tokens) == 0 {
 			continue
 		}
-
-		line = strings.TrimSpace(line)
 
 		switch tokens[0] {
 		case "lease":
