@@ -134,8 +134,6 @@ func (b *BMCService) HandleMessage(message *nsq.Message) error {
 			return outBand.IdentifyLEDOn()
 		case ChassisIdentifyLEDOffCmd:
 			return outBand.IdentifyLEDOff()
-		case UpdateFirmwareCmd:
-			return b.UpdateFirmware(outBand, &event)
 		default:
 			b.log.Error("unhandled command", "topic", b.machineTopic, "channel", "core", "event", event)
 		}

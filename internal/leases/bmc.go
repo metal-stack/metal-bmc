@@ -3,10 +3,10 @@ package leases
 import (
 	"log/slog"
 
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/metal-stack/go-hal"
 	"github.com/metal-stack/go-hal/connect"
 	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
-	"github.com/metal-stack/metal-go/api/models"
 )
 
 func (i *ReportItem) EnrichWithBMCDetails(log *slog.Logger, ipmiPort int, ipmiUser, ipmiPassword string) error {
@@ -19,15 +19,15 @@ func (i *ReportItem) EnrichWithBMCDetails(log *slog.Logger, ipmiPort int, ipmiUs
 	bmcDetails, err := ob.BMCConnection().BMC()
 	if err == nil {
 		i.BmcVersion = &bmcDetails.FirmwareRevision
-		i.FRU = &models.V1MachineFru{
-			BoardMfg:            bmcDetails.BoardMfg,
-			BoardMfgSerial:      bmcDetails.BoardMfgSerial,
-			BoardPartNumber:     bmcDetails.BoardPartNumber,
-			ChassisPartNumber:   bmcDetails.ChassisPartNumber,
-			ChassisPartSerial:   bmcDetails.ChassisPartSerial,
-			ProductManufacturer: bmcDetails.ProductManufacturer,
-			ProductPartNumber:   bmcDetails.ProductPartNumber,
-			ProductSerial:       bmcDetails.ProductSerial,
+		i.FRU = &apiv2.MachineFRU{
+			BoardMfg:            &bmcDetails.BoardMfg,
+			BoardMfgSerial:      &bmcDetails.BoardMfgSerial,
+			BoardPartNumber:     &bmcDetails.BoardPartNumber,
+			ChassisPartNumber:   &bmcDetails.ChassisPartNumber,
+			ChassisPartSerial:   &bmcDetails.ChassisPartSerial,
+			ProductManufacturer: &bmcDetails.ProductManufacturer,
+			ProductPartNumber:   &bmcDetails.ProductPartNumber,
+			ProductSerial:       &bmcDetails.ProductSerial,
 		}
 	} else {
 		log.Warn("could not retrieve bmc details of device", "mac", i.Lease.Mac, "ip", i.Lease.Ip, "err", err)
@@ -46,20 +46,18 @@ func (i *ReportItem) EnrichWithBMCDetails(log *slog.Logger, ipmiPort int, ipmiUs
 		i.BiosVersion = &board.BiosVersion
 		i.IndicatorLED = &board.IndicatorLED
 		if board.PowerMetric != nil {
-			i.PowerMetric = &models.V1PowerMetric{
-				Averageconsumedwatts: &board.PowerMetric.AverageConsumedWatts,
-				Intervalinmin:        &board.PowerMetric.IntervalInMin,
-				Maxconsumedwatts:     &board.PowerMetric.MaxConsumedWatts,
-				Minconsumedwatts:     &board.PowerMetric.MinConsumedWatts,
+			i.PowerMetric = &apiv2.MachinePowerMetric{
+				AverageConsumedWatts: board.PowerMetric.AverageConsumedWatts,
+				IntervalInMin:        board.PowerMetric.IntervalInMin,
+				MaxConsumedWatts:     board.PowerMetric.MaxConsumedWatts,
+				MinConsumedWatts:     board.PowerMetric.MinConsumedWatts,
 			}
 		}
-		var powerSupplies []*models.V1PowerSupply
+		var powerSupplies []*apiv2.MachinePowerSupply
 		for _, ps := range board.PowerSupplies {
-			powerSupplies = append(powerSupplies, &models.V1PowerSupply{
-				Status: &models.V1PowerSupplyStatus{
-					Health: &ps.Status.Health,
-					State:  &ps.Status.State,
-				},
+			powerSupplies = append(powerSupplies, &apiv2.MachinePowerSupply{
+				Health: ps.Status.Health,
+				State:  ps.Status.State,
 			})
 		}
 		i.PowerSupplies = powerSupplies
