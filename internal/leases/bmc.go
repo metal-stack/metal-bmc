@@ -1,16 +1,18 @@
 package leases
 
 import (
+	"log/slog"
+
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/metal-stack/go-hal"
 	"github.com/metal-stack/go-hal/connect"
 	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
 )
 
-func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword string) error {
-	ob, err := connect.OutBand(i.Lease.Ip, ipmiPort, ipmiUser, ipmiPassword, halslog.New(i.Log))
+func (i *ReportItem) EnrichWithBMCDetails(log *slog.Logger, ipmiPort int, ipmiUser, ipmiPassword string) error {
+	ob, err := connect.OutBand(i.Lease.Ip, ipmiPort, ipmiUser, ipmiPassword, halslog.New(log))
 	if err != nil {
-		i.Log.Error("could not establish outband connection to device bmc", "mac", i.Lease.Mac, "ip", i.Lease.Ip, "err", err)
+		log.Error("could not establish outband connection to device bmc", "mac", i.Lease.Mac, "ip", i.Lease.Ip, "err", err)
 		return err
 	}
 
@@ -28,7 +30,7 @@ func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword s
 			ProductSerial:       &bmcDetails.ProductSerial,
 		}
 	} else {
-		i.Log.Warn("could not retrieve bmc details of device", "mac", i.Lease.Mac, "ip", i.Lease.Ip, "err", err)
+		log.Warn("could not retrieve bmc details of device", "mac", i.Lease.Mac, "ip", i.Lease.Ip, "err", err)
 		return err
 	}
 
@@ -66,7 +68,7 @@ func (i *ReportItem) EnrichWithBMCDetails(ipmiPort int, ipmiUser, ipmiPassword s
 		str := u.String()
 		i.UUID = &str
 	} else {
-		i.Log.Warn("could not determine uuid of device", "mac", i.Lease.Mac, "ip", i.Lease.Ip, "err", err)
+		log.Warn("could not determine uuid of device", "mac", i.Lease.Mac, "ip", i.Lease.Ip, "err", err)
 		return err
 	}
 	return nil
