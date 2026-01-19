@@ -9,8 +9,8 @@ import (
 	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
 )
 
-func (i *ReportItem) EnrichWithBMCDetails(log *slog.Logger, ipmiPort int, ipmiUser, ipmiPassword string) error {
-	ob, err := connect.OutBand(i.Lease.Ip, ipmiPort, ipmiUser, ipmiPassword, halslog.New(log))
+func (i *ReportItem) EnrichWithBMCDetails(log *slog.Logger, bmcPort int, bmcUser, bmcPassword string) error {
+	ob, err := connect.OutBand(i.Lease.Ip, bmcPort, bmcUser, bmcPassword, halslog.New(log))
 	if err != nil {
 		log.Error("could not establish outband connection to device bmc", "mac", i.Lease.Mac, "ip", i.Lease.Ip, "err", err)
 		return err

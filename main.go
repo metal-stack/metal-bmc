@@ -54,13 +54,8 @@ func main() {
 	}
 
 	// BMC Events via NSQ
-	b := bmc.New(log, &cfg)
-
-	err = b.InitConsumer()
-	if err != nil {
-		log.Error("unable to create bmc service", "error", err)
-		panic(err)
-	}
+	b := bmc.New(log, client, &cfg)
+	go b.ProcessCommands()
 
 	// BMC Console access
 	console, err := bmc.NewConsole(log, client, cfg)
@@ -69,6 +64,9 @@ func main() {
 		panic(err)
 	}
 	go func() {
+		if console == nil {
+			return
+		}
 		err := console.ListenAndServe()
 		if err != nil {
 			panic(err)

@@ -78,17 +78,17 @@ func (r reporter) collectAndReport() error {
 	g.SetLimit(20)
 	for _, item := range items {
 		g.Go(func() error {
-			return item.EnrichWithBMCDetails(r.log, r.cfg.IpmiPort, r.cfg.IpmiUser, r.cfg.IpmiPassword)
+			return item.EnrichWithBMCDetails(r.log, r.cfg.BMCPort, r.cfg.BMCUser, r.cfg.BMCPassword)
 		})
 	}
 	err = g.Wait()
 	if err != nil {
-		r.log.Error("could not enrich all ipmi details", "error", err)
+		r.log.Error("could not enrich all bmc details", "error", err)
 	}
 
 	err = r.report(items)
 	if err != nil {
-		return fmt.Errorf("could not report ipmi addresses %w", err)
+		return fmt.Errorf("could not report bmc addresses %w", err)
 	}
 	r.log.Info("reporting leases to metal-api", "took", time.Since(start).String())
 	return nil
@@ -183,12 +183,12 @@ func (r reporter) report(items []*leases.ReportItem) error {
 		return err
 	}
 
-	r.log.Info("updated ipmi information", "# of machines", len(ok.UpdatedMachines))
+	r.log.Info("updated bmc information", "# of machines", len(ok.UpdatedMachines))
 	for _, u := range ok.UpdatedMachines {
-		r.log.Info("ipmi information was updated for machine", "uuid", u)
+		r.log.Info("bmc information was updated for machine", "uuid", u)
 	}
 	for _, u := range ok.CreatedMachines {
-		r.log.Info("ipmi information was set and machine was created", "uuid", u)
+		r.log.Info("bmc information was set and machine was created", "uuid", u)
 	}
 
 	return nil

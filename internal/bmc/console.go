@@ -31,7 +31,9 @@ type console struct {
 }
 
 func NewConsole(log *slog.Logger, client apiclient.Client, c config.Config) (*console, error) {
-
+	if c.ConsoleDisabled {
+		return nil, nil
+	}
 	caCert, err := os.ReadFile(c.ConsoleCACertFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load cert: %w", err)
@@ -108,7 +110,7 @@ func (c *console) sessionHandler(s ssh.Session) {
 
 	host, portStr, found := strings.Cut(bmc.Address, ":")
 	if !found {
-		c.log.Error("invalid ipmi address", "address", bmc.Address)
+		c.log.Error("invalid bmc address", "address", bmc.Address)
 		return
 	}
 	port, err := strconv.Atoi(portStr)
@@ -119,7 +121,7 @@ func (c *console) sessionHandler(s ssh.Session) {
 
 	ob, err := halconnect.OutBand(host, port, bmc.User, bmc.Password, halslog.New(c.log))
 	if err != nil {
-		c.log.Error("failed to out-band connect", "host", host, "port", port, "machineID", machineID, "ipmiuser", bmc.User)
+		c.log.Error("failed to out-band connect", "host", host, "port", port, "machineID", machineID, "bmc user", bmc.User)
 		return
 	}
 

@@ -1,12 +1,17 @@
 package bmc
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"strconv"
 	"strings"
-	"time"
 
+	apiclient "github.com/metal-stack/api/go/client"
+	"github.com/metal-stack/api/go/enum"
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
+	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
 	"github.com/metal-stack/go-hal"
 	"github.com/metal-stack/go-hal/connect"
 	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
@@ -14,90 +19,162 @@ import (
 )
 
 type BMCService struct {
-	log *slog.Logger
-	// NSQ related config options
-	mqAddress           string
-	mqCACertFile        string
-	mqClientCertFile    string
-	mqClientCertKeyFile string
-	mqLogLevel          string
-	machineTopic        string
-	machineTopicTTL     time.Duration
+	log    *slog.Logger
+	cfg    *config.Config
+	client apiclient.Client
 }
 
-func New(log *slog.Logger, c *config.Config) *BMCService {
+func New(log *slog.Logger, client apiclient.Client, c *config.Config) *BMCService {
 	b := &BMCService{
-		log:                 log,
-		mqAddress:           c.MQAddress,
-		mqCACertFile:        c.MQCACertFile,
-		mqClientCertFile:    c.MQClientCertFile,
-		mqClientCertKeyFile: c.MQClientCertKeyFile,
-		mqLogLevel:          c.MQLogLevel,
-		machineTopic:        c.MachineTopic,
-		machineTopicTTL:     c.MachineTopicTTL,
+		log:    log,
+		cfg:    c,
+		client: client,
 	}
 	return b
 }
 
-type MachineEvent struct {
-	Type         EventType           `json:"type,omitempty"`
-	OldMachineID string              `json:"old,omitempty"`
-	Cmd          *MachineExecCommand `json:"cmd,omitempty"`
+func (b *BMCService) ProcessCommands() {
+	b.log.Info("processCommand, start waiting for bmc commands")
+
+Retry:
+
+	messageChan, errChan := b.subscribeAsync(context.Background(), b.cfg.PartitionID)
+	select {
+	case message := <-messageChan:
+		err := b.handleMessage(message)
+		if err != nil {
+			b.log.Error("processCommand", "error", err)
+		}
+	case err := <-errChan:
+		if err == io.EOF {
+			b.log.Error("processCommand stream ended", "error", err)
+		}
+		if err == context.Canceled {
+			b.log.Error("processCommand context canceled", "error", err)
+		}
+		b.log.Error("processCommand", "error", err)
+		goto Retry
+	}
+
 }
 
-type MachineExecCommand struct {
-	TargetMachineID string          `json:"target,omitempty"`
-	Command         MachineCommand  `json:"cmd,omitempty"`
-	IPMI            *IPMI           `json:"ipmi,omitempty"`
-	FirmwareUpdate  *FirmwareUpdate `json:"firmwareupdate,omitempty"`
+func (b *BMCService) handleMessage(message *infrav2.WaitForBMCCommandResponse) error {
+
+	var command string
+	commandString, err := enum.GetStringValue(message.BmcCommand)
+	if err != nil {
+		command = message.BmcCommand.String()
+	} else {
+		command = *commandString
+	}
+
+	b.log.Info("handlemessage", "machine", message.Uuid, "command", command, "bmc details", message.MachineBmc)
+
+	if message.MachineBmc == nil {
+		return fmt.Errorf("event does not contain bmc details:%v", message)
+	}
+	outBand, err := b.outBand(message.MachineBmc)
+	if err != nil {
+		b.log.Error("error creating outband connection", "error", err)
+		return err
+	}
+
+	switch message.BmcCommand {
+	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_MACHINE_DELETED:
+		err := outBand.BootFrom(hal.BootTargetPXE)
+		if err != nil {
+			return err
+		}
+		return outBand.PowerReset()
+	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_ON:
+		return outBand.PowerOn()
+	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_OFF:
+		return outBand.PowerOff()
+	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_RESET:
+		return outBand.PowerReset()
+	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_CYCLE:
+		return outBand.PowerCycle()
+	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_BOOT_TO_BIOS:
+		return outBand.BootFrom(hal.BootTargetBIOS)
+	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_BOOT_FROM_DISK:
+		return outBand.BootFrom(hal.BootTargetDisk)
+	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_BOOT_FROM_PXE:
+		return outBand.BootFrom(hal.BootTargetPXE)
+	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_IDENTIFY_LED_ON:
+		return outBand.IdentifyLEDOn()
+	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_IDENTIFY_LED_OFF:
+		return outBand.IdentifyLEDOff()
+	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_MACHINE_CREATED:
+		return outBand.BootFrom(hal.BootTargetDisk)
+	default:
+		b.log.Warn("unhandled command", "command", message.BmcCommand.String())
+	}
+	return nil
 }
 
-type IPMI struct {
-	// Address is host:port of the connection to the ipmi BMC, host can be either a ip address or a hostname
-	Address  string `json:"address"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-	Fru      Fru    `json:"fru"`
+// messageHandler is called when a message is received
+type messageHandler func(*infrav2.WaitForBMCCommandResponse) error
+
+// Subscribe subscribes to a topic and calls the handler for each message
+func (c *BMCService) subscribe(ctx context.Context, topic string, handler messageHandler) error {
+	stream, err := c.client.Infrav2().BMC().WaitForBMCCommand(ctx, &infrav2.WaitForBMCCommandRequest{Partition: topic})
+	if err != nil {
+		return fmt.Errorf("failed to subscribe: %w", err)
+	}
+	defer func() {
+		_ = stream.Close()
+	}()
+
+	c.log.Info("subscribed to machine bmc command", "topic", topic)
+
+	// Receive messages
+	for stream.Receive() {
+		msg := stream.Msg()
+		if err := handler(msg); err != nil {
+			c.log.Error("handler error", "error", err)
+		}
+	}
+
+	if err := stream.Err(); err != nil {
+		if err == io.EOF || err == context.Canceled {
+			return nil
+		}
+		return fmt.Errorf("stream error: %w", err)
+	}
+
+	return nil
 }
 
-type FirmwareUpdate struct {
-	Kind string `json:"kind"`
-	URL  string `json:"url"`
+// SubscribeAsync subscribes asynchronously and returns a channel of messages
+func (c *BMCService) subscribeAsync(ctx context.Context, topic string) (<-chan *infrav2.WaitForBMCCommandResponse, <-chan error) {
+	var (
+		msgChan = make(chan *infrav2.WaitForBMCCommandResponse, 100)
+		errChan = make(chan error, 1)
+	)
+
+	go func() {
+		defer close(msgChan)
+		defer close(errChan)
+
+		err := c.subscribe(ctx, topic, func(msg *infrav2.WaitForBMCCommandResponse) error {
+			select {
+			case msgChan <- msg:
+				return nil
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+		})
+
+		if err != nil && err != context.Canceled {
+			errChan <- err
+		}
+	}()
+
+	return msgChan, errChan
 }
 
-type Fru struct {
-	BoardPartNumber string `json:"board_part_number"`
-}
-
-type MachineCommand string
-
-// FIXME these constants must move to a single location
-const (
-	MachineOnCmd             MachineCommand = "ON"
-	MachineOffCmd            MachineCommand = "OFF"
-	MachineResetCmd          MachineCommand = "RESET"
-	MachineCycleCmd          MachineCommand = "CYCLE"
-	MachineBiosCmd           MachineCommand = "BIOS"
-	MachineDiskCmd           MachineCommand = "DISK"
-	MachinePxeCmd            MachineCommand = "PXE"
-	MachineReinstallCmd      MachineCommand = "REINSTALL"
-	ChassisIdentifyLEDOnCmd  MachineCommand = "LED-ON"
-	ChassisIdentifyLEDOffCmd MachineCommand = "LED-OFF"
-	UpdateFirmwareCmd        MachineCommand = "UPDATE-FIRMWARE"
-)
-
-type EventType string
-
-// FIXME these constants must move to a single location
-const (
-	Create  EventType = "create"
-	Update  EventType = "update"
-	Delete  EventType = "delete"
-	Command EventType = "command"
-)
-
-func (b *BMCService) outBand(ipmi *IPMI) (hal.OutBand, error) {
-	host, portString, found := strings.Cut(ipmi.Address, ":")
+func (b *BMCService) outBand(bmc *apiv2.MachineBMC) (hal.OutBand, error) {
+	host, portString, found := strings.Cut(bmc.Address, ":")
 	if !found {
 		portString = "623"
 
@@ -106,7 +183,7 @@ func (b *BMCService) outBand(ipmi *IPMI) (hal.OutBand, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert port to an int %w", err)
 	}
-	outBand, err := connect.OutBand(host, port, ipmi.User, ipmi.Password, halslog.New(b.log))
+	outBand, err := connect.OutBand(host, port, bmc.User, bmc.Password, halslog.New(b.log))
 	if err != nil {
 		return nil, err
 	}
