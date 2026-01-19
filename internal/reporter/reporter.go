@@ -1,6 +1,7 @@
 package reporter
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/netip"
@@ -10,11 +11,13 @@ import (
 	"syscall"
 	"time"
 
+	apiclient "github.com/metal-stack/api/go/client"
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
+	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
+	"github.com/metal-stack/metal-lib/pkg/pointer"
+
 	"github.com/metal-stack/metal-bmc/internal/leases"
 	"github.com/metal-stack/metal-bmc/pkg/config"
-	metalgo "github.com/metal-stack/metal-go"
-	"github.com/metal-stack/metal-go/api/client/machine"
-	"github.com/metal-stack/metal-go/api/models"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
 )
@@ -23,12 +26,12 @@ import (
 type reporter struct {
 	cfg    *config.Config
 	log    *slog.Logger
-	client metalgo.Client
+	client apiclient.Client
 	sem    *semaphore.Weighted
 }
 
 // New will create a reporter for MachineIpmiReports
-func New(log *slog.Logger, cfg *config.Config, client metalgo.Client) (*reporter, error) {
+func New(log *slog.Logger, cfg *config.Config, client apiclient.Client) (*reporter, error) {
 	return &reporter{
 		cfg:    cfg,
 		log:    log,
@@ -75,17 +78,17 @@ func (r reporter) collectAndReport() error {
 	g.SetLimit(20)
 	for _, item := range items {
 		g.Go(func() error {
-			return item.EnrichWithBMCDetails(r.log, r.cfg.IpmiPort, r.cfg.IpmiUser, r.cfg.IpmiPassword)
+			return item.EnrichWithBMCDetails(r.log, r.cfg.BMCPort, r.cfg.BMCUser, r.cfg.BMCPassword)
 		})
 	}
 	err = g.Wait()
 	if err != nil {
-		r.log.Error("could not enrich all ipmi details", "error", err)
+		r.log.Error("could not enrich all bmc details", "error", err)
 	}
 
 	err = r.report(items)
 	if err != nil {
-		return fmt.Errorf("could not report ipmi addresses %w", err)
+		return fmt.Errorf("could not report bmc addresses %w", err)
 	}
 	r.log.Info("reporting leases to metal-api", "took", time.Since(start).String())
 	return nil
@@ -148,7 +151,7 @@ func (r reporter) isInAllowedCidr(ip string) bool {
 // report will send all gathered information about machines to the metal-api
 func (r reporter) report(items []*leases.ReportItem) error {
 	partitionID := r.cfg.PartitionID
-	reports := make(map[string]models.V1MachineIpmiReport)
+	reports := make(map[string]*apiv2.MachineBMCReport)
 
 	for _, item := range items {
 		item := item
@@ -157,35 +160,35 @@ func (r reporter) report(items []*leases.ReportItem) error {
 			continue
 		}
 
-		report := models.V1MachineIpmiReport{
-			BMCIP:             &item.Lease.Ip,
-			BMCVersion:        item.BmcVersion,
-			BIOSVersion:       item.BiosVersion,
-			FRU:               item.FRU,
-			PowerState:        item.Powerstate,
-			IndicatorLEDState: item.IndicatorLED,
-			PowerMetric:       item.PowerMetric,
-			PowerSupplies:     item.PowerSupplies,
+		report := &apiv2.MachineBMCReport{
+			Bmc: &apiv2.MachineBMC{
+				// FIXME
+				Address:    item.Lease.Ip + ":631",
+				Version:    pointer.SafeDeref(item.BmcVersion),
+				PowerState: pointer.SafeDeref(item.Powerstate),
+			},
+			Bios: &apiv2.MachineBios{
+				Version: pointer.SafeDeref(item.BiosVersion),
+			},
+			Fru:           item.FRU,
+			PowerMetric:   item.PowerMetric,
+			LedState:      &apiv2.MachineChassisIdentifyLEDState{Value: pointer.SafeDeref(item.IndicatorLED)},
+			PowerSupplies: item.PowerSupplies,
 		}
 		reports[*item.UUID] = report
 	}
 
-	mir := &models.V1MachineIpmiReports{
-		Partitionid: partitionID,
-		Reports:     reports,
-	}
-
-	ok, err := r.client.Machine().IpmiReport(machine.NewIpmiReportParams().WithBody(mir), nil)
+	ok, err := r.client.Infrav2().BMC().UpdateBMCInfo(context.Background(), &infrav2.UpdateBMCInfoRequest{Partition: partitionID, BmcReports: reports})
 	if err != nil {
 		return err
 	}
 
-	r.log.Info("updated ipmi information", "# of machines", len(ok.Payload.Updated))
-	for _, u := range ok.Payload.Updated {
-		r.log.Info("ipmi information was updated for machine", "uuid", u)
+	r.log.Info("updated bmc information", "# of machines", len(ok.UpdatedMachines))
+	for _, u := range ok.UpdatedMachines {
+		r.log.Info("bmc information was updated for machine", "uuid", u)
 	}
-	for _, u := range ok.Payload.Created {
-		r.log.Info("ipmi information was set and machine was created", "uuid", u)
+	for _, u := range ok.CreatedMachines {
+		r.log.Info("bmc information was set and machine was created", "uuid", u)
 	}
 
 	return nil

@@ -6,9 +6,9 @@ import (
 	"os"
 	"strings"
 
+	apiclient "github.com/metal-stack/api/go/client"
 	"github.com/metal-stack/metal-bmc/internal/bmc"
 	"github.com/metal-stack/metal-bmc/pkg/config"
-	metalgo "github.com/metal-stack/metal-go"
 
 	"github.com/metal-stack/metal-bmc/internal/reporter"
 	"github.com/metal-stack/v"
@@ -44,20 +44,18 @@ func main() {
 	log.Info("running app version", "version", v.V.String())
 	log.Info("configuration", "config", cfg)
 
-	client, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey, metalgo.AuthType("Metal-Edit"))
+	client, err := apiclient.New(&apiclient.DialConfig{
+		BaseURL: cfg.MetalAPIServerURL.String(),
+		Token:   cfg.MetalAPIServerToken,
+	})
 	if err != nil {
-		log.Error("unable to create metal-api client", "error", err)
+		log.Error("unable to create metal-apiserver client", "error", err)
 		panic(err)
 	}
 
 	// BMC Events via NSQ
-	b := bmc.New(log, &cfg)
-
-	err = b.InitConsumer()
-	if err != nil {
-		log.Error("unable to create bmc service", "error", err)
-		panic(err)
-	}
+	b := bmc.New(log, client, &cfg)
+	go b.ProcessCommands()
 
 	// BMC Console access
 	console, err := bmc.NewConsole(log, client, cfg)
@@ -66,6 +64,9 @@ func main() {
 		panic(err)
 	}
 	go func() {
+		if console == nil {
+			return
+		}
 		err := console.ListenAndServe()
 		if err != nil {
 			panic(err)
