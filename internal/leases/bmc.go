@@ -10,7 +10,7 @@ import (
 )
 
 func (i *ReportItem) EnrichWithBMCDetails(log *slog.Logger, ipmiPort int, ipmiUser, ipmiPassword string) error {
-	ob, err := connect.OutBand(i.Lease.Ip, ipmiPort, ipmiUser, ipmiPassword, halslog.New(log))
+	ob, err := connect.OutBand(i.Lease.Ip, ipmiPort, ipmiUser, ipmiPassword, halslog.New(log), pointer.Pointer(10*time.Second))
 	if err != nil {
 		log.Error("could not establish outband connection to device bmc", "mac", i.Lease.Mac, "ip", i.Lease.Ip, "err", err)
 		return err
