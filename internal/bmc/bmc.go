@@ -11,6 +11,7 @@ import (
 	"github.com/metal-stack/go-hal/connect"
 	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
 	"github.com/metal-stack/metal-bmc/pkg/config"
+	"github.com/metal-stack/metal-lib/pkg/pointer"
 )
 
 type BMCService struct {
@@ -106,7 +107,7 @@ func (b *BMCService) outBand(ipmi *IPMI) (hal.OutBand, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert port to an int %w", err)
 	}
-	outBand, err := connect.OutBand(host, port, ipmi.User, ipmi.Password, halslog.New(b.log))
+	outBand, err := connect.OutBand(host, port, ipmi.User, ipmi.Password, halslog.New(b.log), pointer.Pointer(10*time.Second))
 	if err != nil {
 		return nil, err
 	}

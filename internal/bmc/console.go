@@ -10,12 +10,14 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/metal-stack/go-hal/connect"
 	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
 	"github.com/metal-stack/metal-bmc/pkg/config"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/metal-go/api/client/machine"
+	"github.com/metal-stack/metal-lib/pkg/pointer"
 
 	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
@@ -121,7 +123,7 @@ func (c *console) sessionHandler(s ssh.Session) {
 		return
 	}
 
-	ob, err := connect.OutBand(host, port, *metalIPMI.User, *metalIPMI.Password, halslog.New(c.log))
+	ob, err := connect.OutBand(host, port, *metalIPMI.User, *metalIPMI.Password, halslog.New(c.log), pointer.Pointer(10*time.Second))
 	if err != nil {
 		c.log.Error("failed to out-band connect", "host", host, "port", port, "machineID", machineID, "ipmiuser", *metalIPMI.User)
 		return

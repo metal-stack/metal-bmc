@@ -7,6 +7,8 @@ import (
 	"github.com/metal-stack/go-hal/connect"
 	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
 	"github.com/metal-stack/metal-go/api/models"
+	"time"
+	"github.com/metal-stack/metal-lib/pkg/pointer"
 )
 
 func (i *ReportItem) EnrichWithBMCDetails(log *slog.Logger, ipmiPort int, ipmiUser, ipmiPassword string) error {
