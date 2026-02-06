@@ -6,7 +6,7 @@ require (
 	github.com/gliderlabs/ssh v0.3.8
 	github.com/google/go-cmp v0.7.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/metal-stack/go-hal v0.6.2-0.20260205101547-382a6a92c12b
+	github.com/metal-stack/go-hal v0.6.2-0.20260205170254-bc9953b54838
 	github.com/metal-stack/metal-go v0.42.5
 	github.com/metal-stack/metal-lib v0.23.5
 	github.com/metal-stack/v v1.0.3
