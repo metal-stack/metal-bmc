@@ -142,8 +142,8 @@ github.com/magiconair/properties v1.8.10 h1:s31yESBquKXCV9a/ScB3ESkOjUYYv+X0rg8S
 github.com/magiconair/properties v1.8.10/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
 github.com/mailru/easyjson v0.9.0 h1:PrnmzHw7262yW8sTBwxi1PdJA3Iw/EKBa8psRf7d9a4=
 github.com/mailru/easyjson v0.9.0/go.mod h1:1+xMtQp2MRNVL/V1bOzuP3aP8VNwRW55fQUto+XFtTU=
-github.com/metal-stack/go-hal v0.6.2-0.20260217142444-5829d27a7388 h1:EMUM2yMVj49XeCgNeCPy7sYAuzeprZfHGrP+vBxBR+s=
-github.com/metal-stack/go-hal v0.6.2-0.20260217142444-5829d27a7388/go.mod h1:3Erax8HGCEikZ2Jl62haFIzm4BmzlujXMgBHf4Y0a88=
+github.com/metal-stack/go-hal v0.6.2-0.20260217144829-c15d12177b00 h1:YB4/wi53urYRJEwHsCTJ5FSwMtK20BM0X+kXDgTXZ6I=
+github.com/metal-stack/go-hal v0.6.2-0.20260217144829-c15d12177b00/go.mod h1:86fMwvN+Jp8//j/Cv7ZP/F0ScCv8mK/jmKQLqVYwBNI=
 github.com/metal-stack/metal-go v0.42.5 h1:G7r+FPOCe9NwhYAUs7zKUELjCIAd7jmati+AHHT/4Pc=
 github.com/metal-stack/metal-go v0.42.5/go.mod h1:GSfXrAj55LGsUSMHWGDsmq5n056NG0yb1JM8bgfvKOw=
 github.com/metal-stack/metal-lib v0.23.5 h1:ozrkB3DNr3Cqn8nkBvmzc/KKpYqC1j1mv2OVOj8i7Ac=
@@ -197,8 +197,8 @@ github.com/shirou/gopsutil/v4 v4.25.12 h1:e7PvW/0RmJ8p8vPGJH4jvNkOyLmbkXgXW4m6ZP
 github.com/shirou/gopsutil/v4 v4.25.12/go.mod h1:EivAfP5x2EhLp2ovdpKSozecVXn1TmuG7SMzs/Wh4PU=
 github.com/sirupsen/logrus v1.9.4 h1:TsZE7l11zFCLZnZ+teH4Umoq5BhEIfIzfRDZ1Uzql2w=
 github.com/sirupsen/logrus v1.9.4/go.mod h1:ftWc9WdOfJ0a92nsE2jF5u5ZwH8Bv2zdeOC42RjbV2g=
-github.com/stmcginnis/gofish v0.20.1-0.20260203173523-22b2013b7c28 h1:SbDUY/fBx550CKQ/DhSlNCTXyEJTDn+gFO0J6Gt7cgs=
-github.com/stmcginnis/gofish v0.20.1-0.20260203173523-22b2013b7c28/go.mod h1:PzF5i8ecRG9A2ol8XT64npKUunyraJ+7t0kYMpQAtqU=
+github.com/stmcginnis/gofish v0.21.1 h1:sutDvBhmLh4RDOZ1DN8GUyYRu7f1ggvKMMnSaiqhwn4=
+github.com/stmcginnis/gofish v0.21.1/go.mod h1:PzF5i8ecRG9A2ol8XT64npKUunyraJ+7t0kYMpQAtqU=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.5.2 h1:xuMeJ0Sdp5ZMRXx/aWO6RZxdr3beISkG5/G/aIRr3pY=
 github.com/stretchr/objx v0.5.2/go.mod h1:FRsXN1f5AsAjCGJKqEizvkpNtU+EGNCLh3NxZ/8L+MA=
