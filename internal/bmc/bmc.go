@@ -17,7 +17,6 @@ import (
 	"github.com/metal-stack/go-hal/connect"
 	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
 	"github.com/metal-stack/metal-bmc/pkg/config"
-	"github.com/metal-stack/metal-lib/pkg/pointer"
 )
 
 type BMCService struct {
@@ -83,7 +82,7 @@ func (b *BMCService) handleMessage(message *infrav2.WaitForBMCCommandResponse) e
 	outBand, err := b.outBand(message.MachineBmc)
 	if err != nil {
 		b.log.Error("error creating outband connection", "error", err)
-		req.Error = pointer.Pointer(err.Error())
+		req.Error = new(err.Error())
 		return err
 	}
 
@@ -135,7 +134,7 @@ func (b *BMCService) handleMessage(message *infrav2.WaitForBMCCommandResponse) e
 	err = bmcCommandFunc()
 	if err != nil {
 		b.log.Error("error during bmc command execution", "error", err)
-		req.Error = pointer.Pointer(err.Error())
+		req.Error = new(err.Error())
 	}
 
 	return nil

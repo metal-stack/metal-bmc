@@ -136,7 +136,6 @@ func (r reporter) isInAllowedCidr(ip string) bool {
 		return false
 	}
 	for _, cidr := range r.cfg.AllowedCidrs {
-		cidr := cidr
 		pfx, err := netip.ParsePrefix(cidr)
 		if err != nil {
 			return false
@@ -154,7 +153,6 @@ func (r reporter) report(items []*leases.ReportItem) error {
 	reports := make(map[string]*apiv2.MachineBMCReport)
 
 	for _, item := range items {
-		item := item
 		if item.UUID == nil {
 			r.log.Error("could not determine uuid of device", "mac", item.Lease.Mac, "ip", item.Lease.Ip)
 			continue
