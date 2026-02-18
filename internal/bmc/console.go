@@ -11,6 +11,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	apiclient "github.com/metal-stack/api/go/client"
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
@@ -23,11 +24,12 @@ import (
 )
 
 type console struct {
-	log       *slog.Logger
-	tlsConfig *tls.Config
-	port      int
-	hostKey   gossh.Signer
-	client    apiclient.Client
+	log                      *slog.Logger
+	tlsConfig                *tls.Config
+	port                     int
+	hostKey                  gossh.Signer
+	client                   apiclient.Client
+	redfishConnectionTimeout time.Duration
 }
 
 func NewConsole(log *slog.Logger, client apiclient.Client, c config.Config) (*console, error) {
@@ -64,11 +66,12 @@ func NewConsole(log *slog.Logger, client apiclient.Client, c config.Config) (*co
 	}
 
 	return &console{
-		log:       log,
-		tlsConfig: tlsConfig,
-		port:      c.ConsolePort,
-		hostKey:   hostKey,
-		client:    client,
+		log:                      log,
+		tlsConfig:                tlsConfig,
+		port:                     c.ConsolePort,
+		hostKey:                  hostKey,
+		client:                   client,
+		redfishConnectionTimeout: c.RedfishConnectionTimeout,
 	}, nil
 }
 
@@ -119,7 +122,7 @@ func (c *console) sessionHandler(s ssh.Session) {
 		return
 	}
 
-	ob, err := halconnect.OutBand(host, port, bmc.User, bmc.Password, halslog.New(c.log))
+	ob, err := halconnect.OutBand(host, port, bmc.User, bmc.Password, halslog.New(c.log), &c.redfishConnectionTimeout)
 	if err != nil {
 		c.log.Error("failed to out-band connect", "host", host, "port", port, "machineID", machineID, "bmc user", bmc.User)
 		return

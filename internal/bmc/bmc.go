@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"strconv"
 	"strings"
+	"time"
 
 	apiclient "github.com/metal-stack/api/go/client"
 	"github.com/metal-stack/api/go/enum"
@@ -16,19 +17,22 @@ import (
 	"github.com/metal-stack/go-hal/connect"
 	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
 	"github.com/metal-stack/metal-bmc/pkg/config"
+	"github.com/metal-stack/metal-lib/pkg/pointer"
 )
 
 type BMCService struct {
-	log    *slog.Logger
-	cfg    *config.Config
-	client apiclient.Client
+	log                      *slog.Logger
+	cfg                      *config.Config
+	client                   apiclient.Client
+	redfishConnectionTimeout time.Duration
 }
 
 func New(log *slog.Logger, client apiclient.Client, c *config.Config) *BMCService {
 	b := &BMCService{
-		log:    log,
-		cfg:    c,
-		client: client,
+		log:                      log,
+		cfg:                      c,
+		client:                   client,
+		redfishConnectionTimeout: c.RedfishConnectionTimeout,
 	}
 	return b
 }
@@ -59,8 +63,30 @@ Retry:
 }
 
 func (b *BMCService) handleMessage(message *infrav2.WaitForBMCCommandResponse) error {
+	if message.MachineBmc == nil {
+		return fmt.Errorf("event does not contain bmc details:%v", message)
+	}
 
-	var command string
+	var (
+		command        string
+		bmcCommandFunc func() error
+		req            = &infrav2.BMCCommandDoneRequest{CommandId: message.CommandId}
+	)
+
+	defer func() {
+		_, err := b.client.Infrav2().BMC().BMCCommandDone(context.Background(), req)
+		if err != nil {
+			b.log.Error("error during bmc command done execution", "error", err)
+		}
+	}()
+
+	outBand, err := b.outBand(message.MachineBmc)
+	if err != nil {
+		b.log.Error("error creating outband connection", "error", err)
+		req.Error = pointer.Pointer(err.Error())
+		return err
+	}
+
 	commandString, err := enum.GetStringValue(message.BmcCommand)
 	if err != nil {
 		command = message.BmcCommand.String()
@@ -70,45 +96,48 @@ func (b *BMCService) handleMessage(message *infrav2.WaitForBMCCommandResponse) e
 
 	b.log.Info("handlemessage", "machine", message.Uuid, "command", command, "bmc details", message.MachineBmc)
 
-	if message.MachineBmc == nil {
-		return fmt.Errorf("event does not contain bmc details:%v", message)
-	}
-	outBand, err := b.outBand(message.MachineBmc)
-	if err != nil {
-		b.log.Error("error creating outband connection", "error", err)
-		return err
-	}
-
 	switch message.BmcCommand {
-	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_MACHINE_DELETED:
-		err := outBand.BootFrom(hal.BootTargetPXE)
-		if err != nil {
-			return err
-		}
-		return outBand.PowerReset()
 	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_ON:
-		return outBand.PowerOn()
+		bmcCommandFunc = outBand.PowerOn
 	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_OFF:
-		return outBand.PowerOff()
+		bmcCommandFunc = outBand.PowerOff
 	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_RESET:
-		return outBand.PowerReset()
+		bmcCommandFunc = outBand.PowerReset
 	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_CYCLE:
-		return outBand.PowerCycle()
+		bmcCommandFunc = outBand.PowerCycle
 	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_BOOT_TO_BIOS:
-		return outBand.BootFrom(hal.BootTargetBIOS)
+		bmcCommandFunc = func() error { return outBand.BootFrom(hal.BootTargetBIOS) }
 	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_BOOT_FROM_DISK:
-		return outBand.BootFrom(hal.BootTargetDisk)
+		bmcCommandFunc = func() error { return outBand.BootFrom(hal.BootTargetDisk) }
 	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_BOOT_FROM_PXE:
-		return outBand.BootFrom(hal.BootTargetPXE)
+		bmcCommandFunc = func() error { return outBand.BootFrom(hal.BootTargetPXE) }
 	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_IDENTIFY_LED_ON:
-		return outBand.IdentifyLEDOn()
+		bmcCommandFunc = outBand.IdentifyLEDOn
 	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_IDENTIFY_LED_OFF:
-		return outBand.IdentifyLEDOff()
+		bmcCommandFunc = outBand.IdentifyLEDOff
+
 	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_MACHINE_CREATED:
-		return outBand.BootFrom(hal.BootTargetDisk)
+		bmcCommandFunc = func() error {
+			return outBand.BootFrom(hal.BootTargetDisk)
+		}
+	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_MACHINE_DELETED:
+		bmcCommandFunc = func() error {
+			err := outBand.BootFrom(hal.BootTargetPXE)
+			if err != nil {
+				return err
+			}
+			return outBand.PowerReset()
+		}
 	default:
 		b.log.Warn("unhandled command", "command", message.BmcCommand.String())
 	}
+
+	err = bmcCommandFunc()
+	if err != nil {
+		b.log.Error("error during bmc command execution", "error", err)
+		req.Error = pointer.Pointer(err.Error())
+	}
+
 	return nil
 }
 
@@ -130,6 +159,7 @@ func (c *BMCService) subscribe(ctx context.Context, topic string, handler messag
 	// Receive messages
 	for stream.Receive() {
 		msg := stream.Msg()
+		c.log.Info("machine bmc message received", "message", msg)
 		if err := handler(msg); err != nil {
 			c.log.Error("handler error", "error", err)
 		}
@@ -183,7 +213,7 @@ func (b *BMCService) outBand(bmc *apiv2.MachineBMC) (hal.OutBand, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert port to an int %w", err)
 	}
-	outBand, err := connect.OutBand(host, port, bmc.User, bmc.Password, halslog.New(b.log))
+	outBand, err := connect.OutBand(host, port, bmc.User, bmc.Password, halslog.New(b.log), &b.redfishConnectionTimeout)
 	if err != nil {
 		return nil, err
 	}

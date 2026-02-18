@@ -23,11 +23,12 @@ type Config struct {
 	AllowedCidrs        []string      `required:"false" default:"0.0.0.0/0" desc:"filters dhcp leases" split_words:"true"`
 
 	// Console Proxy parameters
-	ConsoleDisabled   bool   `required:"false" desc:"should console be disabled" envconfig:"console_disabled"`
-	ConsolePort       int    `required:"false" default:"3333" desc:"defines the port where to listen for incoming console connections from metal-console" envconfig:"console_port"`
-	ConsoleCACertFile string `required:"false" default:"ca.pem" desc:"ca cert file" envconfig:"console_ca_cert_file"`
-	ConsoleCertFile   string `required:"false" default:"cert.pem" desc:"cert file" envconfig:"console_cert_file"`
-	ConsoleKeyFile    string `required:"false" default:"key.pem" desc:"key file" envconfig:"console_key_file"`
+	ConsoleDisabled          bool          `required:"false" desc:"should console be disabled" envconfig:"console_disabled"`
+	ConsolePort              int           `required:"false" default:"3333" desc:"defines the port where to listen for incoming console connections from metal-console" envconfig:"console_port"`
+	ConsoleCACertFile        string        `required:"false" default:"ca.pem" desc:"ca cert file" envconfig:"console_ca_cert_file"`
+	ConsoleCertFile          string        `required:"false" default:"cert.pem" desc:"cert file" envconfig:"console_cert_file"`
+	ConsoleKeyFile           string        `required:"false" default:"key.pem" desc:"key file" envconfig:"console_key_file"`
+	RedfishConnectionTimeout time.Duration `required:"false" default:"10s" desc:"the connection timeout for redfish calls" split_words:"true"`
 }
 
 func (c *Config) Validate() error {

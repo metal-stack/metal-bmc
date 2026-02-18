@@ -78,7 +78,7 @@ func (r reporter) collectAndReport() error {
 	g.SetLimit(20)
 	for _, item := range items {
 		g.Go(func() error {
-			return item.EnrichWithBMCDetails(r.log, r.cfg.BMCPort, r.cfg.BMCUser, r.cfg.BMCPassword)
+			return item.EnrichWithBMCDetails(r.log, r.cfg.BMCPort, r.cfg.BMCUser, r.cfg.BMCPassword, r.cfg.RedfishConnectionTimeout)
 		})
 	}
 	err = g.Wait()
