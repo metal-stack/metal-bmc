@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
 	"strings"
+	"time"
 
 	apiclient "github.com/metal-stack/api/go/client"
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/metal-stack/metal-bmc/internal/bmc"
 	"github.com/metal-stack/metal-bmc/pkg/config"
 
@@ -79,6 +82,18 @@ func main() {
 		log.Error("could not start reporter", "error", err)
 		panic(err)
 	}
+
+	// Ping apiserver every 5min
+	client.Ping(context.Background(), &apiclient.PingConfig{
+		ComponentType: apiv2.ComponentType_COMPONENT_TYPE_METAL_BMC,
+		StartedAt:     time.Now(),
+		Version: apiv2.Version{
+			Version:   v.Version,
+			Revision:  v.Revision,
+			GitSha1:   v.GitSHA1,
+			BuildDate: v.BuildDate,
+		},
+	})
 
 	r.Run()
 }

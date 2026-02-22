@@ -80,8 +80,8 @@ github.com/lufia/plan9stats v0.0.0-20251013123823-9fd1530e3ec3 h1:PwQumkgq4/acIi
 github.com/lufia/plan9stats v0.0.0-20251013123823-9fd1530e3ec3/go.mod h1:autxFIvghDt3jPTLoqZ9OZ7s9qTGNAWmYCjVFWPX/zg=
 github.com/magiconair/properties v1.8.10 h1:s31yESBquKXCV9a/ScB3ESkOjUYYv+X0rg8SYxI99mE=
 github.com/magiconair/properties v1.8.10/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
-github.com/metal-stack/api v0.0.49 h1:6BqgSg8gR9R2z8gp4xhndk8mTYZVTklasFf6TnO6aLE=
-github.com/metal-stack/api v0.0.49/go.mod h1:1aVoKcPsSKOQB7gC9SIzlPl27SFK7GGK2iwYPbcGPLU=
+github.com/metal-stack/api v0.0.51 h1:n3KgwUa5rMefb3CgR/hl4xQD1NmGkzj2MyELMqqN4wA=
+github.com/metal-stack/api v0.0.51/go.mod h1:SAtqZaD4JvOn+NVc6bTlKzL2EDoj/QrlHF72ZMw+Btk=
 github.com/metal-stack/go-hal v0.6.2-0.20260204074837-feeacb4238e0 h1:sF+xbxPO8P2+u76xtB1o4m+SUuKAyx4DqSG1yykpwdY=
 github.com/metal-stack/go-hal v0.6.2-0.20260204074837-feeacb4238e0/go.mod h1:gd/I4VOfYGftuh6CfvyDd10E5FX94CUUfVM3UKXRbNM=
 github.com/metal-stack/metal-lib v0.23.5 h1:ozrkB3DNr3Cqn8nkBvmzc/KKpYqC1j1mv2OVOj8i7Ac=
@@ -127,8 +127,8 @@ github.com/shirou/gopsutil/v4 v4.25.12 h1:e7PvW/0RmJ8p8vPGJH4jvNkOyLmbkXgXW4m6ZP
 github.com/shirou/gopsutil/v4 v4.25.12/go.mod h1:EivAfP5x2EhLp2ovdpKSozecVXn1TmuG7SMzs/Wh4PU=
 github.com/sirupsen/logrus v1.9.4 h1:TsZE7l11zFCLZnZ+teH4Umoq5BhEIfIzfRDZ1Uzql2w=
 github.com/sirupsen/logrus v1.9.4/go.mod h1:ftWc9WdOfJ0a92nsE2jF5u5ZwH8Bv2zdeOC42RjbV2g=
-github.com/stmcginnis/gofish v0.21.1 h1:sutDvBhmLh4RDOZ1DN8GUyYRu7f1ggvKMMnSaiqhwn4=
-github.com/stmcginnis/gofish v0.21.1/go.mod h1:PzF5i8ecRG9A2ol8XT64npKUunyraJ+7t0kYMpQAtqU=
+github.com/stmcginnis/gofish v0.21.3 h1:EBLCHfORnbx7MPw7lplOOVe9QAD1T3XRVz6+a1Z4z5Q=
+github.com/stmcginnis/gofish v0.21.3/go.mod h1:PzF5i8ecRG9A2ol8XT64npKUunyraJ+7t0kYMpQAtqU=
 github.com/stretchr/objx v0.5.3 h1:jmXUvGomnU1o3W/V5h2VEradbpJDwGrzugQQvL0POH4=
 github.com/stretchr/objx v0.5.3/go.mod h1:rDQraq+vQZU7Fde9LOZLr8Tax6zZvy4kuNKF+QYS+U0=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
