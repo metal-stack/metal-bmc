@@ -1,6 +1,8 @@
 package leases
 
 import (
+	"fmt"
+	"log/slog"
 	"os"
 	"time"
 )
@@ -29,10 +31,16 @@ func (l Leases) LatestByMac() map[string]Lease {
 	return byMac
 }
 
-func ReadLeases(leaseFile string) (Leases, error) {
-	leasesContent, err := os.ReadFile(leaseFile)
+func ReadLeases(log *slog.Logger, leaseFilePath string) (Leases, error) {
+	data, err := os.ReadFile(leaseFilePath)
 	if err != nil {
 		return nil, err
 	}
-	return parse(string(leasesContent))
+
+	leases, err := parseLeasesFile(log, string(data))
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse lease file: %w", err)
+	}
+
+	return leases, nil
 }

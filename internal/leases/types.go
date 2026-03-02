@@ -1,7 +1,6 @@
 package leases
 
 import (
-	"log/slog"
 	"time"
 
 	"github.com/metal-stack/metal-go/api/models"
@@ -18,7 +17,6 @@ type Leases []Lease
 
 type ReportItem struct {
 	Lease         Lease
-	Log           *slog.Logger
 	UUID          *string
 	BmcVersion    *string
 	BiosVersion   *string

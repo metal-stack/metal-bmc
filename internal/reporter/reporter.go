@@ -62,16 +62,49 @@ func (r reporter) collectAndReport() error {
 	defer r.sem.Release(1)
 
 	start := time.Now()
-	ls, err := leases.ReadLeases(r.cfg.LeaseFile)
+
+	items, err := r.getReportItems()
 	if err != nil {
-		r.log.Error("could not parse leases file, partial results will considered", "error", err)
+		return fmt.Errorf("unable to retrieve report items: %w", err)
 	}
+
+	r.log.Info("reporting leases to metal-api", "count", len(items))
+
+	g := new(errgroup.Group)
+	// Allow 20 goroutines run in parallel at max
+	g.SetLimit(20)
+	for _, item := range items {
+		g.Go(func() error {
+			return item.EnrichWithBMCDetails(r.log, r.cfg.IpmiPort, r.cfg.IpmiUser, r.cfg.IpmiPassword)
+		})
+	}
+	err = g.Wait()
+	if err != nil {
+		r.log.Error("could not enrich all ipmi details", "error", err)
+	}
+
+	err = r.report(items)
+	if err != nil {
+		return fmt.Errorf("could not report ipmi addresses %w", err)
+	}
+	r.log.Info("reporting leases to metal-api", "took", time.Since(start).String())
+	return nil
+}
+
+func (r reporter) getReportItems() ([]*leases.ReportItem, error) {
+	ls, err := leases.ReadLeases(r.log, r.cfg.LeaseFile)
+	if err != nil {
+		return nil, err
+	}
+
 	if len(ls) == 0 {
 		r.log.Warn("empty leases returned, nothing to report")
-		return nil
+		return nil, nil
 	}
+
 	active := ls.FilterActive()
 	byMac := active.LatestByMac()
+
 	r.log.Info("consider reporting leases to metal-api", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
 
 	var items []*leases.ReportItem
@@ -86,31 +119,11 @@ func (r reporter) collectAndReport() error {
 
 		item := &leases.ReportItem{
 			Lease: l,
-			Log:   r.log,
 		}
 		items = append(items, item)
 	}
-	r.log.Info("reporting leases to metal-api", "count", len(items))
 
-	g := new(errgroup.Group)
-	// Allow 20 goroutines run in parallel at max
-	g.SetLimit(20)
-	for _, item := range items {
-		g.Go(func() error {
-			return item.EnrichWithBMCDetails(r.cfg.IpmiPort, r.cfg.IpmiUser, r.cfg.IpmiPassword)
-		})
-	}
-	err = g.Wait()
-	if err != nil {
-		r.log.Error("could not enrich all ipmi details", "error", err)
-	}
-
-	err = r.report(items)
-	if err != nil {
-		return fmt.Errorf("could not report ipmi addresses %w", err)
-	}
-	r.log.Info("reporting leases to metal-api", "took", time.Since(start).String())
-	return nil
+	return items, nil
 }
 
 func (r reporter) isInAllowedCidr(ip string) bool {

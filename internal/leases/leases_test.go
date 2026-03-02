@@ -1,6 +1,7 @@
 package leases
 
 import (
+	"log/slog"
 	"testing"
 	"time"
 
@@ -9,7 +10,7 @@ import (
 )
 
 func TestFilterActive(t *testing.T) {
-	l, err := parse(sampleLeaseContent)
+	l, err := parseLeasesFile(slog.Default(), sampleLeaseContent)
 	require.NoError(t, err)
 	assert.Equal(t, Leases{}, l.FilterActive())
 }
