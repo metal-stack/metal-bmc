@@ -7,8 +7,8 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/api v0.0.51
-	github.com/metal-stack/go-hal v0.6.2-0.20260204074837-feeacb4238e0
-	github.com/metal-stack/metal-lib v0.23.5
+	github.com/metal-stack/go-hal v0.7.0
+	github.com/metal-stack/metal-lib v0.24.0
 	github.com/metal-stack/v v1.0.3
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.48.0
@@ -18,6 +18,7 @@ require (
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260209202127-80ab13bee0bf.1 // indirect
 	connectrpc.com/connect v1.19.1 // indirect
+	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/avast/retry-go/v4 v4.7.0 // indirect
 	github.com/creack/pty v1.1.24 // indirect
@@ -39,7 +40,7 @@ require (
 	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702 // indirect
 	go.mongodb.org/mongo-driver v1.17.9 // indirect
-	golang.org/x/net v0.50.0 // indirect
+	golang.org/x/net v0.51.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
