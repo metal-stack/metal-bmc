@@ -106,7 +106,7 @@ func (b *BMCService) outBand(ipmi *IPMI) (hal.OutBand, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert port to an int %w", err)
 	}
-	outBand, err := connect.OutBand(host, port, ipmi.User, ipmi.Password, halslog.New(b.log))
+	outBand, err := connect.OutBand(host, port, ipmi.User, ipmi.Password, halslog.New(b.log), new(time.Minute))
 	if err != nil {
 		return nil, err
 	}

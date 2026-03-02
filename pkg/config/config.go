@@ -40,7 +40,6 @@ type Config struct {
 
 func (c *Config) Validate() error {
 	for _, cidr := range c.AllowedCidrs {
-		cidr := cidr
 		_, err := netip.ParsePrefix(cidr)
 		if err != nil {
 			return err
