@@ -2,17 +2,18 @@ package leases
 
 import (
 	"log/slog"
+	"time"
+
+	"time"
 
 	"github.com/metal-stack/go-hal"
 	"github.com/metal-stack/go-hal/connect"
 	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
 	"github.com/metal-stack/metal-go/api/models"
-	"time"
-	"github.com/metal-stack/metal-lib/pkg/pointer"
 )
 
 func (i *ReportItem) EnrichWithBMCDetails(log *slog.Logger, ipmiPort int, ipmiUser, ipmiPassword string) error {
-	ob, err := connect.OutBand(i.Lease.Ip, ipmiPort, ipmiUser, ipmiPassword, halslog.New(log), pointer.Pointer(10*time.Second))
+	ob, err := connect.OutBand(i.Lease.Ip, ipmiPort, ipmiUser, ipmiPassword, halslog.New(log), new(time.Minute))
 	if err != nil {
 		log.Error("could not establish outband connection to device bmc", "mac", i.Lease.Mac, "ip", i.Lease.Ip, "err", err)
 		return err
