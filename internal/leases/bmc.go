@@ -4,8 +4,6 @@ import (
 	"log/slog"
 	"time"
 
-	"time"
-
 	"github.com/metal-stack/go-hal"
 	"github.com/metal-stack/go-hal/connect"
 	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
