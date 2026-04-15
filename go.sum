@@ -148,8 +148,8 @@ github.com/lufia/plan9stats v0.0.0-20260216142805-b3301c5f2a88 h1:PTw+yKnXcOFCR6
 github.com/lufia/plan9stats v0.0.0-20260216142805-b3301c5f2a88/go.mod h1:autxFIvghDt3jPTLoqZ9OZ7s9qTGNAWmYCjVFWPX/zg=
 github.com/magiconair/properties v1.8.10 h1:s31yESBquKXCV9a/ScB3ESkOjUYYv+X0rg8SYxI99mE=
 github.com/magiconair/properties v1.8.10/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
-github.com/metal-stack/go-hal v0.7.1-0.20260412184111-d9fc0353dbcd h1:MT1pLxsQVmIYpID7+6DvqLvx4g9jG8LriidUfHhgaGM=
-github.com/metal-stack/go-hal v0.7.1-0.20260412184111-d9fc0353dbcd/go.mod h1:IPc4NmFQ/0zK5/IXTZr+e/ZbOMmMSInJBshO5grbAkI=
+github.com/metal-stack/go-hal v0.7.1-0.20260415124810-bded598c6e39 h1:IlDDjMxSun20BzPblpzGwk0NqcS6idGgm8O3JcIZrbM=
+github.com/metal-stack/go-hal v0.7.1-0.20260415124810-bded598c6e39/go.mod h1:IPc4NmFQ/0zK5/IXTZr+e/ZbOMmMSInJBshO5grbAkI=
 github.com/metal-stack/metal-go v0.43.0 h1:uODD0YCwnAYzyvFxWNakZrymBoMz1FAvP5hkhsR83VQ=
 github.com/metal-stack/metal-go v0.43.0/go.mod h1:GSfXrAj55LGsUSMHWGDsmq5n056NG0yb1JM8bgfvKOw=
 github.com/metal-stack/metal-lib v0.24.0 h1:wvQQPWIXcA2tP+I6zAHUNdtVLLJfQnnV9yG2SoqUkz4=
