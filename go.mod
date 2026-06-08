@@ -6,7 +6,7 @@ require (
 	github.com/gliderlabs/ssh v0.3.8
 	github.com/google/go-cmp v0.7.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/metal-stack/go-hal v0.7.2-0.20260529145115-99be3141eea5
+	github.com/metal-stack/go-hal v0.7.2-0.20260605145432-bc665df80bd3
 	github.com/metal-stack/metal-go v0.43.3
 	github.com/metal-stack/metal-lib v0.25.1
 	github.com/metal-stack/v v1.0.3
@@ -62,7 +62,6 @@ require (
 	github.com/lestrrat-go/jwx/v3 v3.1.1 // indirect
 	github.com/lestrrat-go/option/v2 v2.0.0 // indirect
 	github.com/metal-stack/security v0.9.6 // indirect
-	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/oklog/ulid/v2 v2.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/segmentio/asm v1.2.1 // indirect
