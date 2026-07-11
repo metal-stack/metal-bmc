@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/metal-stack/metal-lib/pkg/testcommon"
+	"github.com/metal-stack/api/go/errorutil"
 )
 
 var sampleLeaseContent = `
@@ -122,7 +122,7 @@ func Test_parseLeasesFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, gotErr := parseLeasesFile(slog.Default(), tt.data)
-			if diff := cmp.Diff(tt.wantErr, gotErr, testcommon.ErrorStringComparer()); diff != "" {
+			if diff := cmp.Diff(tt.wantErr, gotErr, errorutil.ErrorStringComparer()); diff != "" {
 				t.Errorf("error diff = %s", diff)
 				return
 			}
