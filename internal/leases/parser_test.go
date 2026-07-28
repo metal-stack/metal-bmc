@@ -121,7 +121,7 @@ func Test_parseLeasesFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, gotErr := parseLeasesFile(slog.Default(), tt.data)
+			got, gotErr := parseLeasesFile(slog.Default(), tt.data, FormatIsc)
 			if diff := cmp.Diff(tt.wantErr, gotErr, testcommon.ErrorStringComparer()); diff != "" {
 				t.Errorf("error diff = %s", diff)
 				return

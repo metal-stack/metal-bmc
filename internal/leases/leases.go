@@ -31,13 +31,14 @@ func (l Leases) LatestByMac() map[string]Lease {
 	return byMac
 }
 
-func ReadLeases(log *slog.Logger, leaseFilePath string) (Leases, error) {
+// ReadLeases reads the lease file at the given path and parses it in the given format.
+func ReadLeases(log *slog.Logger, leaseFilePath string, format Format) (Leases, error) {
 	data, err := os.ReadFile(leaseFilePath)
 	if err != nil {
 		return nil, err
 	}
 
-	leases, err := parseLeasesFile(log, string(data))
+	leases, err := parseLeasesFile(log, string(data), format)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse lease file: %w", err)
 	}

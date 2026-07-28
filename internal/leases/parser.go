@@ -12,7 +12,20 @@ const (
 	leaseDateFormat = "2006/01/02 15:04:05"
 )
 
-func parseLeasesFile(log *slog.Logger, data string) (Leases, error) {
+// parseLeasesFile parses the given lease file content in the given format.
+func parseLeasesFile(log *slog.Logger, data string, format Format) (Leases, error) {
+	switch format {
+	case FormatIsc:
+		return parseIscLeasesFile(log, data)
+	case FormatKea:
+		return parseKeaLeasesFile(log, data)
+	default:
+		return nil, fmt.Errorf("unsupported lease file format: %q", format)
+	}
+}
+
+// parseIscLeasesFile parses the lease file format of the isc-dhcp-server.
+func parseIscLeasesFile(log *slog.Logger, data string) (Leases, error) {
 	var (
 		leases  Leases
 		current *Lease
