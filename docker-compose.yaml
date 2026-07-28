@@ -9,8 +9,13 @@ services:
     network_mode: host
     volumes:
       - ${PWD}/dhcpd.leases:/dhcpd.leases
+      - ${PWD}/kea-leases4.csv:/kea-leases4.csv
     environment:
       METAL_BMC_LEASE_FILE: /dhcpd.leases
+      METAL_BMC_LEASE_FORMAT: isc
+      # to read the leases of a kea-dhcp-server instead:
+      # METAL_BMC_LEASE_FILE: /kea-leases4.csv
+      # METAL_BMC_LEASE_FORMAT: kea
       METAL_BMC_PARTITION_ID: partition
       METAL_BMC_METAL_API_URL: http://localhost:8080
       METAL_BMC_METAL_API_HMAC_KEY: test

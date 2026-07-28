@@ -21,19 +21,26 @@ import (
 
 // reporter reports information about bmc, bios and dhcp ip of bmc to metal-api
 type reporter struct {
-	cfg    *config.Config
-	log    *slog.Logger
-	client metalgo.Client
-	sem    *semaphore.Weighted
+	cfg         *config.Config
+	log         *slog.Logger
+	client      metalgo.Client
+	sem         *semaphore.Weighted
+	leaseFormat leases.Format
 }
 
 // New will create a reporter for MachineIpmiReports
 func New(log *slog.Logger, cfg *config.Config, client metalgo.Client) (*reporter, error) {
+	leaseFormat, err := cfg.GetLeaseFormat()
+	if err != nil {
+		return nil, err
+	}
+
 	return &reporter{
-		cfg:    cfg,
-		log:    log,
-		client: client,
-		sem:    semaphore.NewWeighted(1),
+		cfg:         cfg,
+		log:         log,
+		client:      client,
+		sem:         semaphore.NewWeighted(1),
+		leaseFormat: leaseFormat,
 	}, nil
 }
 
@@ -92,7 +99,7 @@ func (r reporter) collectAndReport() error {
 }
 
 func (r reporter) getReportItems() ([]*leases.ReportItem, error) {
-	ls, err := leases.ReadLeases(r.log, r.cfg.LeaseFile)
+	ls, err := leases.ReadLeases(r.log, r.cfg.LeaseFile, r.leaseFormat)
 	if err != nil {
 		return nil, err
 	}

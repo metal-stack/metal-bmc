@@ -15,16 +15,40 @@ import (
 )
 
 //go:embed dhcpd.test.leases
-var leaseFile string
+var iscLeaseFile string
+
+// keaLeaseFile contains the same reportable lease as iscLeaseFile
+//
+//go:embed kea-leases4.test.csv
+var keaLeaseFile string
 
 func Test_reporter_getReportItems(t *testing.T) {
 	tests := []struct {
-		name string
-		want []*leases.ReportItem
-		err  error
+		name        string
+		leaseFile   string
+		leaseFormat leases.Format
+		want        []*leases.ReportItem
+		err         error
 	}{
 		{
-			name: "parse leases file",
+			name:        "parse isc leases file",
+			leaseFile:   iscLeaseFile,
+			leaseFormat: leases.FormatIsc,
+			want: []*leases.ReportItem{
+				{
+					Lease: leases.Lease{
+						Mac:   "00:00:00:00:00:01",
+						Ip:    "10.0.0.1",
+						Begin: time.Date(2080, 01, 8, 14, 44, 2, 0, time.UTC),
+						End:   time.Date(2080, 01, 10, 14, 44, 2, 0, time.UTC),
+					},
+				},
+			},
+		},
+		{
+			name:        "parse kea leases file",
+			leaseFile:   keaLeaseFile,
+			leaseFormat: leases.FormatKea,
 			want: []*leases.ReportItem{
 				{
 					Lease: leases.Lease{
@@ -46,7 +70,7 @@ func Test_reporter_getReportItems(t *testing.T) {
 				require.NoError(t, err)
 			}()
 
-			err = os.WriteFile(f.Name(), []byte(leaseFile), 0600)
+			err = os.WriteFile(f.Name(), []byte(tt.leaseFile), 0600)
 			require.NoError(t, err)
 
 			r := &reporter{
@@ -54,7 +78,8 @@ func Test_reporter_getReportItems(t *testing.T) {
 					LeaseFile:    f.Name(),
 					AllowedCidrs: []string{"10.0.0.1/24"},
 				},
-				log: slog.Default(),
+				log:         slog.Default(),
+				leaseFormat: tt.leaseFormat,
 			}
 
 			got, err := r.getReportItems()
