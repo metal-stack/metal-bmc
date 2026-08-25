@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"slices"
+	"strings"
 	"syscall"
 	"time"
 
@@ -21,19 +22,21 @@ import (
 
 // reporter reports information about bmc, bios and dhcp ip of bmc to metal-api
 type reporter struct {
-	cfg    *config.Config
-	log    *slog.Logger
-	client metalgo.Client
-	sem    *semaphore.Weighted
+	cfg         *config.Config
+	log         *slog.Logger
+	client      metalgo.Client
+	sem         *semaphore.Weighted
+	staticHosts []string
 }
 
 // New will create a reporter for MachineIpmiReports
 func New(log *slog.Logger, cfg *config.Config, client metalgo.Client) (*reporter, error) {
 	return &reporter{
-		cfg:    cfg,
-		log:    log,
-		client: client,
-		sem:    semaphore.NewWeighted(1),
+		cfg:         cfg,
+		log:         log,
+		client:      client,
+		sem:         semaphore.NewWeighted(1),
+		staticHosts: cfg.StaticHosts,
 	}, nil
 }
 
@@ -95,6 +98,22 @@ func (r reporter) getReportItems() ([]*leases.ReportItem, error) {
 	ls, err := leases.ReadLeases(r.log, r.cfg.LeaseFile)
 	if err != nil {
 		return nil, err
+	}
+
+	now := time.Now()
+
+	for _, host := range r.staticHosts {
+		mac, ip, ok := strings.Cut(host, ";")
+		if !ok {
+			return nil, fmt.Errorf("invalid static host: %s", ip)
+		}
+
+		ls = append(ls, leases.Lease{
+			Mac:   mac,
+			Ip:    ip,
+			Begin: now.Add(-1 * time.Minute),
+			End:   now.Add(7 * 24 * time.Hour),
+		})
 	}
 
 	if len(ls) == 0 {
