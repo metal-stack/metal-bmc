@@ -149,8 +149,10 @@ func (r reporter) isInAllowedCidr(ip string) bool {
 
 // report will send all gathered information about machines to the metal-api
 func (r reporter) report(items []*leases.ReportItem) error {
-	partitionID := r.cfg.PartitionID
-	reports := make(map[string]*apiv2.MachineBMCReport)
+	var (
+		partitionID = r.cfg.PartitionID
+		reports     []*apiv2.MachineBMCReport
+	)
 
 	for _, item := range items {
 		if item.UUID == nil {
@@ -159,6 +161,7 @@ func (r reporter) report(items []*leases.ReportItem) error {
 		}
 
 		report := &apiv2.MachineBMCReport{
+			Uuid: *item.UUID,
 			Bmc: &apiv2.MachineBMC{
 				// FIXME
 				Address:    item.Lease.Ip + ":631",
@@ -173,7 +176,7 @@ func (r reporter) report(items []*leases.ReportItem) error {
 			LedState:      &apiv2.MachineChassisIdentifyLEDState{Value: pointer.SafeDeref(item.IndicatorLED)},
 			PowerSupplies: item.PowerSupplies,
 		}
-		reports[*item.UUID] = report
+		reports = append(reports, report)
 	}
 
 	ok, err := r.client.Infrav2().BMC().UpdateBMCInfo(context.Background(), &infrav2.UpdateBMCInfoRequest{Partition: partitionID, BmcReports: reports})

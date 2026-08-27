@@ -100,8 +100,12 @@ func (c *console) sessionHandler(s ssh.Session) {
 		c.log.Error("failed to receive BMC data", "machineID", machineID, "error", err)
 		return
 	}
+	if resp.BmcDetails == nil || resp.BmcDetails.BmcReport == nil {
+		c.log.Error("failed to receive BMC data, bmcDetails or bmcReport is nil", "machineID", machineID, "error", err)
+		return
+	}
 
-	bmc := resp.Bmc.Bmc
+	bmc := resp.BmcDetails.BmcReport.Bmc
 	if bmc.Address == "" {
 		c.log.Error("failed to receive BMC.Address data", "machineID", machineID)
 		return
