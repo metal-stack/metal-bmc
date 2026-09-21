@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/metal-stack/api/go/client"
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/metal-stack/metal-bmc/internal/bmc"
+	"github.com/metal-stack/metal-bmc/internal/bmcv2"
 	"github.com/metal-stack/metal-bmc/pkg/config"
 	metalgo "github.com/metal-stack/metal-go"
 
@@ -21,6 +24,9 @@ import (
 )
 
 func main() {
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
 	var cfg config.Config
 	if err := envconfig.Process("METAL_BMC", &cfg); err != nil {
 		panic(fmt.Errorf("bad configuration: %w", err))
@@ -64,7 +70,7 @@ func main() {
 	}
 
 	// Ping apiserver every 5min
-	v2client.Ping(context.Background(), &client.PingConfig{
+	v2client.Ping(ctx, &client.PingConfig{
 		ComponentType: apiv2.ComponentType_COMPONENT_TYPE_METAL_CONSOLE,
 		StartedAt:     time.Now(),
 		Version: apiv2.Version{
@@ -97,6 +103,10 @@ func main() {
 		}
 	}()
 
+	bmcv2.New(log, v2client, &cfg).ProcessCommands(ctx)
+
+	// TODO: implement v2 console, we really want bidi streams now because we do not want to open a second server listener
+
 	// Report IPMI Details
 	r, err := reporter.New(log, &cfg, v2client)
 	if err != nil {
@@ -104,5 +114,5 @@ func main() {
 		panic(err)
 	}
 
-	r.Run()
+	r.Run(ctx)
 }

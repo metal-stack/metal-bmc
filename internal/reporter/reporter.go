@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/netip"
-	"os/signal"
 	"slices"
-	"syscall"
 	"time"
 
 	"github.com/metal-stack/api/go/client"
@@ -37,10 +35,8 @@ func New(log *slog.Logger, cfg *config.Config, client client.Client) (*reporter,
 	}, nil
 }
 
-func (r reporter) Run() {
+func (r reporter) Run(ctx context.Context) {
 	periodic := time.NewTicker(r.cfg.ReportInterval)
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
 
 	for {
 		select {

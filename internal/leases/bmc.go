@@ -52,20 +52,20 @@ func (i *ReportItem) EnrichWithBMCDetails(log *slog.Logger, ipmiPort int, ipmiUs
 
 	powerState, err := ob.PowerState()
 	if err == nil {
-		i.MachineBMCReport.Bmc.PowerState = powerState.String()
+		i.Bmc.PowerState = powerState.String()
 	} else {
 		log.Warn("could not retrieve power state", "err", err)
-		i.MachineBMCReport.Bmc.PowerState = hal.PowerUnknownState.String()
+		i.Bmc.PowerState = hal.PowerUnknownState.String()
 	}
 
 	board := ob.Board()
 
 	if board != nil {
-		i.MachineBMCReport.Bios = &apiv2.MachineBios{
+		i.Bios = &apiv2.MachineBios{
 			Version: board.BiosVersion,
 		}
 
-		i.MachineBMCReport.LedState = &apiv2.MachineChassisIdentifyLEDState{
+		i.LedState = &apiv2.MachineChassisIdentifyLEDState{
 			Value: board.IndicatorLED,
 		}
 
