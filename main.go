@@ -60,9 +60,26 @@ func main() {
 		panic(err)
 	}
 
+	tokenPersister, err := client.NewFilesystemTokenPersister(cfg.TokenFile)
+	if err != nil {
+		log.Error("error creating token persister", "error", err)
+		panic(err)
+	}
+
+	token, err := os.ReadFile(cfg.TokenFile)
+	if err != nil {
+		log.Error("error reading token", "error", err)
+		panic(err)
+	}
+
 	v2client, err := client.New(&client.DialConfig{
 		BaseURL:   cfg.MetalAPIServerURL,
-		TokenFile: cfg.TokenFile,
+		Token:     strings.TrimSpace(string(token)),
+		UserAgent: "metal-bmc",
+		Log:       log,
+		TokenRenewal: &client.TokenRenewal{
+			PersistTokenFn: tokenPersister,
+		},
 	})
 	if err != nil {
 		log.Error("failed to create metal-apiserver client", "error", err)
@@ -71,7 +88,7 @@ func main() {
 
 	// Ping apiserver every 5min
 	v2client.Ping(ctx, &client.PingConfig{
-		ComponentType: apiv2.ComponentType_COMPONENT_TYPE_METAL_CONSOLE,
+		ComponentType: apiv2.ComponentType_COMPONENT_TYPE_METAL_BMC,
 		StartedAt:     time.Now(),
 		Version: apiv2.Version{
 			Version:   v.Version,
