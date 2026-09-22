@@ -1,6 +1,6 @@
 module github.com/metal-stack/metal-bmc
 
-go 1.26.0
+go 1.27
 
 require (
 	github.com/gliderlabs/ssh v0.3.8
@@ -15,6 +15,7 @@ require (
 	github.com/stretchr/testify v1.12.1
 	golang.org/x/crypto v0.50.0
 	golang.org/x/sync v0.22.0
+	google.golang.org/protobuf v1.36.12
 )
 
 require (
@@ -81,6 +82,5 @@ require (
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
-	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 )
