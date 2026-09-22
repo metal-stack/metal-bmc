@@ -1,0 +1,5 @@
+Types: deb deb-src
+URIs: http://deb.debian.org/debian
+Suites: bullseye
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.pgp
