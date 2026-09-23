@@ -1,6 +1,7 @@
 package leases
 
 import (
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -34,7 +35,7 @@ func (i *ReportItem) EnrichWithBMCDetails(log *slog.Logger, ipmiPort int, ipmiUs
 	i.MachineBMCReport = apiv2.MachineBMCReport{
 		Uuid: u.String(),
 		Bmc: &apiv2.MachineBMC{
-			Address: i.Lease.Ip,
+			Address: fmt.Sprintf("%s:%d", i.Lease.Ip, ipmiPort),
 			Mac:     i.Lease.Mac,
 			Version: bmcDetails.FirmwareRevision,
 		},
