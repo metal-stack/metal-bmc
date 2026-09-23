@@ -42,7 +42,7 @@ func (b *V2) ProcessCommands(ctx context.Context) {
 		case message := <-messageChan:
 			log := b.log.With("machine", message.Uuid, "command", message.BmcCommand.String(), "bmc", message.MachineBmc)
 
-			err := b.handleMessage(ctx, message)
+			err := b.handleMessage(ctx, log, message)
 			if err != nil {
 				log.Error("error handling v2 command", "error", err)
 			} else {
@@ -64,7 +64,7 @@ func (b *V2) ProcessCommands(ctx context.Context) {
 	}
 }
 
-func (b *V2) handleMessage(ctx context.Context, message *infrav2.WaitForBMCCommandResponse) error {
+func (b *V2) handleMessage(ctx context.Context, log *slog.Logger, message *infrav2.WaitForBMCCommandResponse) error {
 	if message.MachineBmc == nil {
 		return fmt.Errorf("event does not contain bmc details: %v", message)
 	}
@@ -77,18 +77,18 @@ func (b *V2) handleMessage(ctx context.Context, message *infrav2.WaitForBMCComma
 	defer func() {
 		_, err := b.client.Infrav2().BMC().BMCCommandDone(ctx, req)
 		if err != nil {
-			b.log.Error("error during bmc command done execution", "error", err)
+			log.Error("error during bmc command done execution", "error", err)
 		}
 	}()
 
 	outBand, err := b.outBand(message.MachineBmc)
 	if err != nil {
-		b.log.Error("error creating outband connection", "error", err)
+		log.Error("error creating outband connection", "error", err)
 		req.Error = new(err.Error())
 		return err
 	}
 
-	b.log.Info("handle bmc command", "machine", message.Uuid, "command", message.BmcCommand.String(), "bmc", message.MachineBmc)
+	log.Info("handle bmc command")
 
 	switch message.BmcCommand {
 	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_ON:
@@ -128,7 +128,7 @@ func (b *V2) handleMessage(ctx context.Context, message *infrav2.WaitForBMCComma
 	}
 
 	if err := bmcCommandFunc(); err != nil {
-		b.log.Error("error during bmc command execution", "error", err)
+		log.Error("error during bmc command execution", "error", err)
 		req.Error = new(err.Error())
 	}
 
