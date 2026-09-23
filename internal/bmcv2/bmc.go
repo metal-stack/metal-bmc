@@ -40,6 +40,8 @@ func (b *V2) ProcessCommands(ctx context.Context) {
 		case message := <-messageChan:
 			log := b.log.With("machine", message.Uuid, "command", message.BmcCommand.String(), "bmc", message.MachineBmc)
 
+			log.Info("handle v2 command")
+
 			err := b.handleMessage(ctx, log, message)
 			if err != nil {
 				log.Error("error handling v2 command", "error", err)
@@ -75,7 +77,7 @@ func (b *V2) handleMessage(ctx context.Context, log *slog.Logger, message *infra
 	defer func() {
 		_, err := b.client.Infrav2().BMC().BMCCommandDone(ctx, req)
 		if err != nil {
-			log.Error("error during bmc command done execution", "error", err)
+			log.Error("error sending bmc command done response", "error", err)
 		}
 	}()
 
@@ -85,8 +87,6 @@ func (b *V2) handleMessage(ctx context.Context, log *slog.Logger, message *infra
 		req.Error = new(err.Error())
 		return err
 	}
-
-	log.Info("handle bmc command")
 
 	switch message.BmcCommand {
 	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_ON:
@@ -126,7 +126,6 @@ func (b *V2) handleMessage(ctx context.Context, log *slog.Logger, message *infra
 	}
 
 	if err := bmcCommandFunc(); err != nil {
-		log.Error("error during bmc command execution", "error", err)
 		req.Error = new(err.Error())
 	}
 
