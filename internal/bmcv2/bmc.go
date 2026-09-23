@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"strconv"
 	"strings"
-	"time"
 
 	apiclient "github.com/metal-stack/api/go/client"
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
@@ -19,10 +18,9 @@ import (
 )
 
 type V2 struct {
-	log                      *slog.Logger
-	cfg                      *config.Config
-	client                   apiclient.Client
-	redfishConnectionTimeout time.Duration
+	log    *slog.Logger
+	cfg    *config.Config
+	client apiclient.Client
 }
 
 func New(log *slog.Logger, client apiclient.Client, c *config.Config) *V2 {
@@ -208,7 +206,7 @@ func (b *V2) outBand(bmc *apiv2.MachineBMC) (hal.OutBand, error) {
 		return nil, fmt.Errorf("unable to convert port to an int: %w", err)
 	}
 
-	outBand, err := connect.OutBand(host, port, bmc.User, bmc.Password, halslog.New(b.log), &b.redfishConnectionTimeout)
+	outBand, err := connect.OutBand(host, port, bmc.User, bmc.Password, halslog.New(b.log), nil)
 	if err != nil {
 		return nil, err
 	}
