@@ -3,17 +3,17 @@ package bmcv2
 import (
 	"context"
 	"fmt"
-	"io"
 	"log/slog"
 	"strconv"
 	"strings"
 	"time"
 
+	"connectrpc.com/connect"
 	apiclient "github.com/metal-stack/api/go/client"
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
 	"github.com/metal-stack/go-hal"
-	"github.com/metal-stack/go-hal/connect"
+	halconnect "github.com/metal-stack/go-hal/connect"
 	halslog "github.com/metal-stack/go-hal/pkg/logger/slog"
 	"github.com/metal-stack/metal-bmc/pkg/config"
 )
@@ -35,42 +35,13 @@ func New(log *slog.Logger, client apiclient.Client, c *config.Config) *V2 {
 const reconnectDelay = 5 * time.Second
 
 func (b *V2) ProcessCommands(ctx context.Context) {
-	for {
-		err := b.processCommandStream(ctx)
-		if ctx.Err() != nil {
-			b.log.Info("received stop signal, stop serving bmc commands")
-			return
-		}
-
-		b.log.Error("command stream ended, reconnecting", "error", err)
-
-		select {
-		case <-time.After(reconnectDelay):
-		case <-ctx.Done():
-			b.log.Info("received stop signal, stop serving bmc commands")
-			return
-		}
-	}
-}
-
-func (b *V2) processCommandStream(ctx context.Context) error {
-	streamCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	messageChan, errChan := b.subscribeAsync(streamCtx, b.cfg.PartitionID)
-
-	b.log.Info("subscribed to receiving v2 bmc commands")
+	msgs, errs := apiclient.ReconnectingStreamRead(ctx, func(ctx context.Context) (*connect.ServerStreamForClient[infrav2.WaitForBMCCommandResponse], error) {
+		return b.client.Infrav2().BMC().WaitForBMCCommand(ctx, &infrav2.WaitForBMCCommandRequest{Partition: b.cfg.PartitionID})
+	}, apiclient.WithStreamBackoff(reconnectDelay), apiclient.WithStreamLogger(b.log))
 
 	for {
 		select {
-		case message, ok := <-messageChan:
-			if !ok {
-				return io.EOF
-			}
-			if message == nil {
-				continue
-			}
-
+		case message := <-msgs:
 			log := b.log.With("machine", message.Uuid, "command", message.BmcCommand.String(), "bmc", message.MachineBmc)
 
 			log.Info("handle v2 command")
@@ -81,22 +52,18 @@ func (b *V2) processCommandStream(ctx context.Context) error {
 			} else {
 				log.Info("successfully handled v2 command")
 			}
-		case err, ok := <-errChan:
-			if !ok || err == nil {
-				return io.EOF
-			}
-			return err
+
+		case err := <-errs:
+			b.log.Error("error handling v2 command", "error", err)
+
 		case <-ctx.Done():
-			return ctx.Err()
+			b.log.Info("context cancelled, stop processing v2 commands")
+			return
 		}
 	}
 }
 
 func (b *V2) handleMessage(ctx context.Context, log *slog.Logger, message *infrav2.WaitForBMCCommandResponse) error {
-	if message.MachineBmc == nil {
-		return fmt.Errorf("event does not contain bmc details: %v", message)
-	}
-
 	var (
 		bmcCommandFunc func() error
 		req            = &infrav2.BMCCommandDoneRequest{CommandId: message.CommandId}
@@ -108,6 +75,12 @@ func (b *V2) handleMessage(ctx context.Context, log *slog.Logger, message *infra
 			log.Error("error sending bmc command done response", "error", err)
 		}
 	}()
+
+	if message.MachineBmc == nil {
+		err := fmt.Errorf("event does not contain bmc details: %v", message)
+		req.Error = new(err.Error())
+		return err
+	}
 
 	outBand, err := b.outBand(message.MachineBmc)
 	if err != nil {
@@ -160,71 +133,6 @@ func (b *V2) handleMessage(ctx context.Context, log *slog.Logger, message *infra
 	return nil
 }
 
-// messageHandler is called when a message is received
-type messageHandler func(*infrav2.WaitForBMCCommandResponse) error
-
-// Subscribe subscribes to a topic and calls the handler for each message
-func (c *V2) subscribe(ctx context.Context, topic string, handler messageHandler) error {
-	stream, err := c.client.Infrav2().BMC().WaitForBMCCommand(ctx, &infrav2.WaitForBMCCommandRequest{Partition: topic})
-	if err != nil {
-		return fmt.Errorf("failed to subscribe: %w", err)
-	}
-	defer func() {
-		_ = stream.Close()
-	}()
-
-	c.log.Info("subscribed to machine bmc command", "topic", topic)
-
-	// Receive messages
-	for stream.Receive() {
-		msg := stream.Msg()
-		c.log.Info("machine bmc message received", "message", msg)
-		if err := handler(msg); err != nil {
-			if ctx.Err() != nil {
-				return nil
-			}
-			c.log.Error("handler error", "error", err)
-		}
-	}
-
-	if err := stream.Err(); err != nil {
-		if err == io.EOF || err == context.Canceled {
-			return nil
-		}
-		return fmt.Errorf("stream error: %w", err)
-	}
-
-	return nil
-}
-
-// subscribeAsync subscribes asynchronously and returns a channel of messages
-func (c *V2) subscribeAsync(ctx context.Context, topic string) (<-chan *infrav2.WaitForBMCCommandResponse, <-chan error) {
-	var (
-		msgChan = make(chan *infrav2.WaitForBMCCommandResponse, 100)
-		errChan = make(chan error, 1)
-	)
-
-	go func() {
-		defer close(msgChan)
-		defer close(errChan)
-
-		err := c.subscribe(ctx, topic, func(msg *infrav2.WaitForBMCCommandResponse) error {
-			select {
-			case msgChan <- msg:
-				return nil
-			case <-ctx.Done():
-				return ctx.Err()
-			}
-		})
-
-		if err != nil && err != context.Canceled {
-			errChan <- err
-		}
-	}()
-
-	return msgChan, errChan
-}
-
 func (b *V2) outBand(bmc *apiv2.MachineBMC) (hal.OutBand, error) {
 	host, portString, found := strings.Cut(bmc.Address, ":")
 	if !found {
@@ -236,7 +144,7 @@ func (b *V2) outBand(bmc *apiv2.MachineBMC) (hal.OutBand, error) {
 		return nil, fmt.Errorf("unable to convert port to an int: %w", err)
 	}
 
-	outBand, err := connect.OutBand(host, port, bmc.User, bmc.Password, halslog.New(b.log), nil)
+	outBand, err := halconnect.OutBand(host, port, bmc.User, bmc.Password, halslog.New(b.log), nil)
 	if err != nil {
 		return nil, err
 	}

@@ -3,10 +3,11 @@ module github.com/metal-stack/metal-bmc
 go 1.27
 
 require (
+	connectrpc.com/connect v1.20.0
 	github.com/gliderlabs/ssh v0.3.8
 	github.com/google/go-cmp v0.7.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/metal-stack/api v0.5.5
+	github.com/metal-stack/api v0.6.1-0.20260923165234-d6f8c32f0ec2
 	github.com/metal-stack/go-hal v0.7.2
 	github.com/metal-stack/metal-go v0.43.1
 	github.com/metal-stack/metal-lib v0.24.1
@@ -20,7 +21,6 @@ require (
 
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.12-20260825204119-511051f7f437.1 // indirect
-	connectrpc.com/connect v1.20.0 // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/avast/retry-go/v4 v4.7.0 // indirect
@@ -58,7 +58,7 @@ require (
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
-	github.com/klauspost/compress v1.19.2 // indirect
+	github.com/klauspost/compress v1.20.0 // indirect
 	github.com/klauspost/connect-compress/v2 v2.1.1 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.4 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
