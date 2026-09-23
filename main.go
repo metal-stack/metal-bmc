@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
@@ -72,6 +74,17 @@ func main() {
 		panic(err)
 	}
 
+	// keep alives are quite low on metal-apiserver, we need to apply them in order not
+	// to receive regular stream timeouts
+	transport := &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   5 * time.Second,
+			KeepAlive: 5 * time.Second,
+		}).DialContext,
+		IdleConnTimeout: 10 * time.Second,
+		MaxIdleConns:    1,
+	}
+
 	v2client, err := client.New(&client.DialConfig{
 		BaseURL:   cfg.MetalAPIServerURL,
 		Token:     strings.TrimSpace(string(token)),
@@ -80,6 +93,7 @@ func main() {
 		TokenRenewal: &client.TokenRenewal{
 			PersistTokenFn: tokenPersister,
 		},
+		Transport: transport,
 	})
 	if err != nil {
 		log.Error("failed to create metal-apiserver client", "error", err)
