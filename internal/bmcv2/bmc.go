@@ -32,10 +32,11 @@ func New(log *slog.Logger, client apiclient.Client, c *config.Config) *V2 {
 }
 
 func (b *V2) ProcessCommands(ctx context.Context) {
-	b.log.Info("start waiting for v2 bmc commands")
-
 	for {
 		messageChan, errChan := b.subscribeAsync(ctx, b.cfg.PartitionID)
+
+		b.log.Info("subscribed to receiving v2 bmc commands")
+
 		select {
 		case message := <-messageChan:
 			log := b.log.With("machine", message.Uuid, "command", message.BmcCommand.String(), "bmc", message.MachineBmc)
