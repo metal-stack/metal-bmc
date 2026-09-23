@@ -82,7 +82,7 @@ func main() {
 			KeepAlive: 5 * time.Second,
 		}).DialContext,
 		IdleConnTimeout: 10 * time.Second,
-		MaxIdleConns:    1,
+		MaxIdleConns:    10,
 	}
 
 	v2client, err := client.New(&client.DialConfig{
@@ -134,7 +134,7 @@ func main() {
 		}
 	}()
 
-	bmcv2.New(log, v2client, &cfg).ProcessCommands(ctx)
+	go bmcv2.New(log, v2client, &cfg).ProcessCommands(ctx)
 
 	// TODO: implement v2 console, we really want bidi streams now because we do not want to open a second server listener
 
