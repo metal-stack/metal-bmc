@@ -40,9 +40,13 @@ func (b *V2) ProcessCommands(ctx context.Context) {
 		messageChan, errChan := b.subscribeAsync(ctx, b.cfg.PartitionID)
 		select {
 		case message := <-messageChan:
+			log := b.log.With("machine", message.Uuid, "command", message.BmcCommand.String(), "bmc", message.MachineBmc)
+
 			err := b.handleMessage(ctx, message)
 			if err != nil {
-				b.log.Error("error handling v2 command", "error", err)
+				log.Error("error handling v2 command", "error", err)
+			} else {
+				log.Info("successfully handled v2 command")
 			}
 		case err := <-errChan:
 			switch err {
