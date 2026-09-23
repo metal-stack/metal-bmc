@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"strconv"
 	"strings"
+	"time"
 
 	apiclient "github.com/metal-stack/api/go/client"
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
@@ -31,14 +32,45 @@ func New(log *slog.Logger, client apiclient.Client, c *config.Config) *V2 {
 	}
 }
 
+const reconnectDelay = 5 * time.Second
+
 func (b *V2) ProcessCommands(ctx context.Context) {
 	for {
-		messageChan, errChan := b.subscribeAsync(ctx, b.cfg.PartitionID)
+		err := b.processCommandStream(ctx)
+		if ctx.Err() != nil {
+			b.log.Info("received stop signal, stop serving bmc commands")
+			return
+		}
 
-		b.log.Info("subscribed to receiving v2 bmc commands")
+		b.log.Error("command stream ended, reconnecting", "error", err)
 
 		select {
-		case message := <-messageChan:
+		case <-time.After(reconnectDelay):
+		case <-ctx.Done():
+			b.log.Info("received stop signal, stop serving bmc commands")
+			return
+		}
+	}
+}
+
+func (b *V2) processCommandStream(ctx context.Context) error {
+	streamCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	messageChan, errChan := b.subscribeAsync(streamCtx, b.cfg.PartitionID)
+
+	b.log.Info("subscribed to receiving v2 bmc commands")
+
+	for {
+		select {
+		case message, ok := <-messageChan:
+			if !ok {
+				return io.EOF
+			}
+			if message == nil {
+				continue
+			}
+
 			log := b.log.With("machine", message.Uuid, "command", message.BmcCommand.String(), "bmc", message.MachineBmc)
 
 			log.Info("handle v2 command")
@@ -49,18 +81,13 @@ func (b *V2) ProcessCommands(ctx context.Context) {
 			} else {
 				log.Info("successfully handled v2 command")
 			}
-		case err := <-errChan:
-			switch err {
-			case io.EOF:
-				b.log.Error("command stream ended", "error", err)
-			case context.Canceled:
-				b.log.Error("context canceled", "error", err)
-			default:
-				b.log.Error("command receive error", "error", err)
+		case err, ok := <-errChan:
+			if !ok || err == nil {
+				return io.EOF
 			}
+			return err
 		case <-ctx.Done():
-			b.log.Info("received stop signal, stop serving bmc commands")
-			return
+			return ctx.Err()
 		}
 	}
 }
@@ -153,6 +180,9 @@ func (c *V2) subscribe(ctx context.Context, topic string, handler messageHandler
 		msg := stream.Msg()
 		c.log.Info("machine bmc message received", "message", msg)
 		if err := handler(msg); err != nil {
+			if ctx.Err() != nil {
+				return nil
+			}
 			c.log.Error("handler error", "error", err)
 		}
 	}
