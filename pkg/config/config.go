@@ -22,6 +22,10 @@ type Config struct {
 	IgnoreMacs      []string      `required:"false" desc:"mac addresses to ignore" split_words:"true"`
 	AllowedCidrs    []string      `required:"false" default:"0.0.0.0/0" desc:"filters dhcp leases" split_words:"true"`
 
+	// metal-apiserver (v2) configuration items
+	MetalAPIServerURL string `required:"true" desc:"endpoint for the metal-apiserver" envconfig:"metal_apiserver_url"`
+	TokenFile         string `required:"true"  desc:"the token file for metal-apiserver communication" envconfig:"metal_apiserver_token_file"`
+
 	// NSQ connection parameters
 	MQAddress           string        `required:"false" default:"localhost:4150" desc:"set the nsqd server address" envconfig:"mq_address"`
 	MQCACertFile        string        `required:"false" default:"" desc:"the CA certificate file for verifying MQ certificate" envconfig:"mq_ca_cert_file"`

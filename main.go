@@ -1,12 +1,21 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
+	"net"
+	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
+	"github.com/metal-stack/api/go/client"
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/metal-stack/metal-bmc/internal/bmc"
+	"github.com/metal-stack/metal-bmc/internal/bmcv2"
 	"github.com/metal-stack/metal-bmc/pkg/config"
 	metalgo "github.com/metal-stack/metal-go"
 
@@ -17,6 +26,9 @@ import (
 )
 
 func main() {
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
 	var cfg config.Config
 	if err := envconfig.Process("METAL_BMC", &cfg); err != nil {
 		panic(fmt.Errorf("bad configuration: %w", err))
@@ -44,11 +56,61 @@ func main() {
 	log.Info("running app version", "version", v.V.String())
 	log.Info("configuration", "config", cfg)
 
-	client, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey, metalgo.AuthType("Metal-Edit"))
+	v1client, err := metalgo.NewDriver(cfg.MetalAPIURL.String(), "", cfg.MetalAPIHMACKey, metalgo.AuthType("Metal-Edit"))
 	if err != nil {
 		log.Error("unable to create metal-api client", "error", err)
 		panic(err)
 	}
+
+	tokenPersister, err := client.NewFilesystemTokenPersister(cfg.TokenFile)
+	if err != nil {
+		log.Error("error creating token persister", "error", err)
+		panic(err)
+	}
+
+	token, err := os.ReadFile(cfg.TokenFile)
+	if err != nil {
+		log.Error("error reading token", "error", err)
+		panic(err)
+	}
+
+	// keep alives are quite low on metal-apiserver, we need to apply them in order not
+	// to receive regular stream timeouts
+	transport := &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   5 * time.Second,
+			KeepAlive: 5 * time.Second,
+		}).DialContext,
+		IdleConnTimeout: 10 * time.Second,
+		MaxIdleConns:    10,
+	}
+
+	v2client, err := client.New(&client.DialConfig{
+		BaseURL:   cfg.MetalAPIServerURL,
+		Token:     strings.TrimSpace(string(token)),
+		UserAgent: "metal-bmc",
+		Log:       log,
+		TokenRenewal: &client.TokenRenewal{
+			PersistTokenFn: tokenPersister,
+		},
+		Transport: transport,
+	})
+	if err != nil {
+		log.Error("failed to create metal-apiserver client", "error", err)
+		panic(err)
+	}
+
+	// Ping apiserver every 5min
+	v2client.Ping(ctx, &client.PingConfig{
+		ComponentType: apiv2.ComponentType_COMPONENT_TYPE_METAL_BMC,
+		StartedAt:     time.Now(),
+		Version: apiv2.Version{
+			Version:   v.Version,
+			Revision:  v.Revision,
+			GitSha1:   v.GitSHA1,
+			BuildDate: v.BuildDate,
+		},
+	})
 
 	// BMC Events via NSQ
 	b := bmc.New(log, &cfg)
@@ -60,7 +122,7 @@ func main() {
 	}
 
 	// BMC Console access
-	console, err := bmc.NewConsole(log, client, cfg)
+	console, err := bmc.NewConsole(log, v1client, cfg)
 	if err != nil {
 		log.Error("unable to create bmc console", "error", err)
 		panic(err)
@@ -72,12 +134,17 @@ func main() {
 		}
 	}()
 
+	go bmcv2.New(log, v2client, &cfg).ProcessCommands(ctx)
+
+	// TODO: implement v2 console, we really do not want to open a second server listener
+	// let's find a better solution with bidi streams, vpn, ... whatever
+
 	// Report IPMI Details
-	r, err := reporter.New(log, &cfg, client)
+	r, err := reporter.New(log, &cfg, v2client)
 	if err != nil {
 		log.Error("could not start reporter", "error", err)
 		panic(err)
 	}
 
-	r.Run()
+	r.Run(ctx)
 }
