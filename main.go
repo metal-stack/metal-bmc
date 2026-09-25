@@ -136,7 +136,8 @@ func main() {
 
 	go bmcv2.New(log, v2client, &cfg).ProcessCommands(ctx)
 
-	// TODO: implement v2 console, we really want bidi streams now because we do not want to open a second server listener
+	// TODO: implement v2 console, we really do not want to open a second server listener
+	// let's find a better solution with bidi streams, vpn, ... whatever
 
 	// Report IPMI Details
 	r, err := reporter.New(log, &cfg, v2client)

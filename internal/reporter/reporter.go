@@ -17,7 +17,7 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-// reporter reports information about bmc, bios and dhcp ip of bmc to metal-api
+// reporter reports information about bmc, bios and dhcp ip of bmc to metal-apiserver
 type reporter struct {
 	cfg    *config.Config
 	log    *slog.Logger
@@ -66,7 +66,7 @@ func (r reporter) collectAndReport(ctx context.Context) error {
 		return fmt.Errorf("unable to retrieve report items: %w", err)
 	}
 
-	r.log.Info("reporting leases to metal-api", "count", len(items))
+	r.log.Info("reporting leases to metal-apiserver", "count", len(items))
 
 	g := new(errgroup.Group)
 	// Allow 20 goroutines run in parallel at max
@@ -85,7 +85,7 @@ func (r reporter) collectAndReport(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("could not report ipmi addresses %w", err)
 	}
-	r.log.Info("reporting leases to metal-api", "took", time.Since(start).String())
+	r.log.Info("reporting leases to metal-apiserver", "took", time.Since(start).String())
 	return nil
 }
 
@@ -103,7 +103,7 @@ func (r reporter) getReportItems() ([]*leases.ReportItem, error) {
 	active := ls.FilterActive()
 	byMac := active.LatestByMac()
 
-	r.log.Info("consider reporting leases to metal-api", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
+	r.log.Info("consider reporting leases to metal-apiserver", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
 
 	var items []*leases.ReportItem
 	for _, l := range byMac {
@@ -142,7 +142,7 @@ func (r reporter) isInAllowedCidr(ip string) bool {
 	return false
 }
 
-// report will send all gathered information about machines to the metal-api
+// report will send all gathered information about machines to the metal-apiserver
 func (r reporter) report(ctx context.Context, items []*leases.ReportItem) error {
 	var reports []*apiv2.MachineBMCReport
 
