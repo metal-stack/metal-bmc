@@ -100,7 +100,7 @@ func (b *V2) handleMessage(ctx context.Context, log *slog.Logger, message *infra
 		bmcCommandFunc = outBand.PowerCycle
 	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_BOOT_TO_BIOS:
 		bmcCommandFunc = func() error { return outBand.BootFrom(hal.BootTargetBIOS) }
-	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_BOOT_FROM_DISK:
+	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_BOOT_FROM_DISK, apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_MACHINE_CREATED:
 		bmcCommandFunc = func() error { return outBand.BootFrom(hal.BootTargetDisk) }
 	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_BOOT_FROM_PXE:
 		bmcCommandFunc = func() error { return outBand.BootFrom(hal.BootTargetPXE) }
@@ -108,10 +108,6 @@ func (b *V2) handleMessage(ctx context.Context, log *slog.Logger, message *infra
 		bmcCommandFunc = outBand.IdentifyLEDOn
 	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_IDENTIFY_LED_OFF:
 		bmcCommandFunc = outBand.IdentifyLEDOff
-	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_MACHINE_CREATED:
-		bmcCommandFunc = func() error {
-			return outBand.BootFrom(hal.BootTargetDisk)
-		}
 	case apiv2.MachineBMCCommand_MACHINE_BMC_COMMAND_MACHINE_DELETED:
 		bmcCommandFunc = func() error {
 			err := outBand.BootFrom(hal.BootTargetPXE)
