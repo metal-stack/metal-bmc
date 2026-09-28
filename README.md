@@ -26,4 +26,4 @@ Firmware updates the firmware of the BIOS and the BMC of a machine.
 
 ### Console
 
-Console forwards the the serial console access terminated in `metal-console` to the machine.
+Console forwards the serial console access terminated in `metal-console` to the machine.
