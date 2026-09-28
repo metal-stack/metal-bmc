@@ -12,6 +12,7 @@ import (
 	"github.com/metal-stack/metal-bmc/internal/leases"
 	"github.com/metal-stack/metal-bmc/pkg/config"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 //go:embed dhcpd.test.leases
@@ -63,7 +64,7 @@ func Test_reporter_getReportItems(t *testing.T) {
 				return
 			}
 
-			if diff := cmp.Diff(tt.want, got); diff != "" {
+			if diff := cmp.Diff(tt.want, got, protocmp.Transform()); diff != "" {
 				t.Errorf("diff = %s", diff)
 			}
 		})

@@ -1,11 +1,12 @@
-# we must stay at debian-11 because otherwise ipmitool v1.18.19 will be installed which is broken
+# we must stay with ipmitool v1.8.18, newer version will break behavior
 # see comment below
-FROM debian:11-slim
+FROM debian:13-slim
 
+COPY bullseye.sources /etc/apt/sources.list.d/
 RUN apt update \
  && apt install --yes --no-install-recommends \
     ca-certificates \
-    ipmitool \
+    ipmitool=1.8.18-10.1 \
     libvirt-clients \
  # /usr/bin/sum is provided by busybox
  && rm /usr/bin/sum
@@ -13,7 +14,7 @@ RUN apt update \
 # Add missing file from ipmitool debian packaging
 # see https://github.com/ipmitool/ipmitool/issues/377
 # see https://groups.google.com/g/linux.debian.bugs.dist/c/ukUAcfnm280
-# This file is only required in ipmitool v1.18.19, debian-11 still is at v1.18.18 which works fine
+# This file is only required in ipmitool v1.8.19, debian-11 still is at v1.8.18 which works fine
 # ADD https://www.iana.org/assignments/enterprise-numbers.txt /usr/share/misc/enterprise-numbers.txt
 
 COPY bin/metal-bmc /

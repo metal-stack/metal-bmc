@@ -3,7 +3,7 @@ package leases
 import (
 	"time"
 
-	"github.com/metal-stack/metal-go/api/models"
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 )
 
 type Lease struct {
@@ -16,13 +16,6 @@ type Lease struct {
 type Leases []Lease
 
 type ReportItem struct {
-	Lease         Lease
-	UUID          *string
-	BmcVersion    *string
-	BiosVersion   *string
-	FRU           *models.V1MachineFru
-	Powerstate    *string
-	IndicatorLED  *string
-	PowerMetric   *models.V1PowerMetric
-	PowerSupplies []*models.V1PowerSupply
+	Lease Lease
+	apiv2.MachineBMCReport
 }

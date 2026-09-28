@@ -1,34 +1,32 @@
 package reporter
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/netip"
-	"os"
-	"os/signal"
 	"slices"
-	"syscall"
 	"time"
 
+	"github.com/metal-stack/api/go/client"
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
+	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
 	"github.com/metal-stack/metal-bmc/internal/leases"
 	"github.com/metal-stack/metal-bmc/pkg/config"
-	metalgo "github.com/metal-stack/metal-go"
-	"github.com/metal-stack/metal-go/api/client/machine"
-	"github.com/metal-stack/metal-go/api/models"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
 )
 
-// reporter reports information about bmc, bios and dhcp ip of bmc to metal-api
+// reporter reports information about bmc, bios and dhcp ip of bmc to metal-apiserver
 type reporter struct {
 	cfg    *config.Config
 	log    *slog.Logger
-	client metalgo.Client
+	client client.Client
 	sem    *semaphore.Weighted
 }
 
 // New will create a reporter for MachineIpmiReports
-func New(log *slog.Logger, cfg *config.Config, client metalgo.Client) (*reporter, error) {
+func New(log *slog.Logger, cfg *config.Config, client client.Client) (*reporter, error) {
 	return &reporter{
 		cfg:    cfg,
 		log:    log,
@@ -37,24 +35,24 @@ func New(log *slog.Logger, cfg *config.Config, client metalgo.Client) (*reporter
 	}, nil
 }
 
-func (r reporter) Run() {
+func (r reporter) Run(ctx context.Context) {
 	periodic := time.NewTicker(r.cfg.ReportInterval)
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+
 	for {
 		select {
 		case <-periodic.C:
-			err := r.collectAndReport()
+			err := r.collectAndReport(ctx)
 			if err != nil {
 				r.log.Error("collect and report", "error", err)
 			}
-		case <-signals:
+		case <-ctx.Done():
+			r.log.Info("received shutdown signal, stopping")
 			return
 		}
 	}
 }
 
-func (r reporter) collectAndReport() error {
+func (r reporter) collectAndReport(ctx context.Context) error {
 	if !r.sem.TryAcquire(1) {
 		r.log.Warn("lease reporting is still running")
 		return nil
@@ -68,7 +66,7 @@ func (r reporter) collectAndReport() error {
 		return fmt.Errorf("unable to retrieve report items: %w", err)
 	}
 
-	r.log.Info("reporting leases to metal-api", "count", len(items))
+	r.log.Info("reporting leases to metal-apiserver", "count", len(items))
 
 	g := new(errgroup.Group)
 	// Allow 20 goroutines run in parallel at max
@@ -83,11 +81,11 @@ func (r reporter) collectAndReport() error {
 		r.log.Error("could not enrich all ipmi details", "error", err)
 	}
 
-	err = r.report(items)
+	err = r.report(ctx, items)
 	if err != nil {
 		return fmt.Errorf("could not report ipmi addresses %w", err)
 	}
-	r.log.Info("reporting leases to metal-api", "took", time.Since(start).String())
+	r.log.Info("reporting leases to metal-apiserver", "took", time.Since(start).String())
 	return nil
 }
 
@@ -105,7 +103,7 @@ func (r reporter) getReportItems() ([]*leases.ReportItem, error) {
 	active := ls.FilterActive()
 	byMac := active.LatestByMac()
 
-	r.log.Info("consider reporting leases to metal-api", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
+	r.log.Info("consider reporting leases to metal-apiserver", "all", len(ls), "active", len(active), "uniqueActive", len(byMac))
 
 	var items []*leases.ReportItem
 	for _, l := range byMac {
@@ -144,45 +142,32 @@ func (r reporter) isInAllowedCidr(ip string) bool {
 	return false
 }
 
-// report will send all gathered information about machines to the metal-api
-func (r reporter) report(items []*leases.ReportItem) error {
-	partitionID := r.cfg.PartitionID
-	reports := make(map[string]models.V1MachineIpmiReport)
+// report will send all gathered information about machines to the metal-apiserver
+func (r reporter) report(ctx context.Context, items []*leases.ReportItem) error {
+	var reports []*apiv2.MachineBMCReport
 
 	for _, item := range items {
-		if item.UUID == nil {
+		if item.Uuid == "" {
 			r.log.Error("could not determine uuid of device", "mac", item.Lease.Mac, "ip", item.Lease.Ip)
 			continue
 		}
 
-		report := models.V1MachineIpmiReport{
-			BMCIP:             &item.Lease.Ip,
-			BMCVersion:        item.BmcVersion,
-			BIOSVersion:       item.BiosVersion,
-			FRU:               item.FRU,
-			PowerState:        item.Powerstate,
-			IndicatorLEDState: item.IndicatorLED,
-			PowerMetric:       item.PowerMetric,
-			PowerSupplies:     item.PowerSupplies,
-		}
-		reports[*item.UUID] = report
+		reports = append(reports, &item.MachineBMCReport)
 	}
 
-	mir := &models.V1MachineIpmiReports{
-		Partitionid: partitionID,
-		Reports:     reports,
-	}
-
-	ok, err := r.client.Machine().IpmiReport(machine.NewIpmiReportParams().WithBody(mir), nil)
+	resp, err := r.client.Infrav2().BMC().UpdateBMCInfo(ctx, &infrav2.UpdateBMCInfoRequest{
+		Partition:  r.cfg.PartitionID,
+		BmcReports: reports,
+	})
 	if err != nil {
 		return err
 	}
 
-	r.log.Info("updated ipmi information", "# of machines", len(ok.Payload.Updated))
-	for _, u := range ok.Payload.Updated {
+	r.log.Info("updated ipmi information", "# of machines", len(resp.UpdatedMachines))
+	for _, u := range resp.UpdatedMachines {
 		r.log.Info("ipmi information was updated for machine", "uuid", u)
 	}
-	for _, u := range ok.Payload.Created {
+	for _, u := range resp.CreatedMachines {
 		r.log.Info("ipmi information was set and machine was created", "uuid", u)
 	}
 
