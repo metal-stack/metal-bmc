@@ -1,8 +1,10 @@
 package config
 
 import (
+	"errors"
 	"net/netip"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -21,6 +23,7 @@ type Config struct {
 	IpmiPassword    string        `required:"false" default:"ADMIN" desc:"the ipmi password" split_words:"true"`
 	IgnoreMacs      []string      `required:"false" desc:"mac addresses to ignore" split_words:"true"`
 	AllowedCidrs    []string      `required:"false" default:"0.0.0.0/0" desc:"filters dhcp leases" split_words:"true"`
+	StaticHosts     []string      `required:"false" desc:"a static BMC host list that is used in addition to the addresses discovered from the dhcpd lease list. must be in the form <mac>-<ip>" split_words:"true"`
 
 	// metal-apiserver (v2) configuration items
 	MetalAPIServerURL string `required:"true" desc:"endpoint for the metal-apiserver" envconfig:"metal_apiserver_url"`
@@ -49,5 +52,18 @@ func (c *Config) Validate() error {
 			return err
 		}
 	}
+
+	for _, host := range c.StaticHosts {
+		_, ip, ok := strings.Cut(host, ";")
+		if !ok {
+			return errors.New("static hosts must be provided in the form <mac>;<ip>")
+		}
+
+		_, err := netip.ParseAddr(ip)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
