@@ -19,19 +19,23 @@ import (
 
 // reporter reports information about bmc, bios and dhcp ip of bmc to metal-apiserver
 type reporter struct {
-	cfg    *config.Config
-	log    *slog.Logger
-	client client.Client
-	sem    *semaphore.Weighted
+	cfg         *config.Config
+	log         *slog.Logger
+	client      client.Client
+	sem         *semaphore.Weighted
+	staticHosts []*config.StaticHost
 }
 
 // New will create a reporter for MachineIpmiReports
 func New(log *slog.Logger, cfg *config.Config, client client.Client) (*reporter, error) {
+	staticHosts, _ := cfg.ParseStaticHosts()
+
 	return &reporter{
-		cfg:    cfg,
-		log:    log,
-		client: client,
-		sem:    semaphore.NewWeighted(1),
+		cfg:         cfg,
+		log:         log,
+		client:      client,
+		sem:         semaphore.NewWeighted(1),
+		staticHosts: staticHosts,
 	}, nil
 }
 
@@ -93,6 +97,17 @@ func (r reporter) getReportItems() ([]*leases.ReportItem, error) {
 	ls, err := leases.ReadLeases(r.log, r.cfg.LeaseFile)
 	if err != nil {
 		return nil, err
+	}
+
+	now := time.Now()
+
+	for _, host := range r.staticHosts {
+		ls = append(ls, leases.Lease{
+			Mac:   host.Mac,
+			Ip:    host.IP,
+			Begin: now.Add(-1 * time.Minute),
+			End:   now.Add(7 * 24 * time.Hour),
+		})
 	}
 
 	if len(ls) == 0 {
