@@ -8,9 +8,9 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/api v0.8.4
+	github.com/metal-stack/go-hal v0.7.4
 	github.com/metal-stack/metal-go v0.45.0
 	github.com/metal-stack/metal-lib v0.26.4
-	github.com/metal-stack/go-hal v0.7.4
 	github.com/metal-stack/v v1.0.3
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/stretchr/testify v1.12.1
