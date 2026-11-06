@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/netip"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/metal-stack/api/go/client"
@@ -24,17 +23,19 @@ type reporter struct {
 	log         *slog.Logger
 	client      client.Client
 	sem         *semaphore.Weighted
-	staticHosts []string
+	staticHosts []*config.StaticHost
 }
 
 // New will create a reporter for MachineIpmiReports
 func New(log *slog.Logger, cfg *config.Config, client client.Client) (*reporter, error) {
+	staticHosts, _ := cfg.ParseStaticHosts()
+
 	return &reporter{
 		cfg:         cfg,
 		log:         log,
 		client:      client,
 		sem:         semaphore.NewWeighted(1),
-		staticHosts: cfg.StaticHosts,
+		staticHosts: staticHosts,
 	}, nil
 }
 
@@ -101,14 +102,9 @@ func (r reporter) getReportItems() ([]*leases.ReportItem, error) {
 	now := time.Now()
 
 	for _, host := range r.staticHosts {
-		mac, ip, ok := strings.Cut(host, ";")
-		if !ok {
-			return nil, fmt.Errorf("invalid static host: %s", ip)
-		}
-
 		ls = append(ls, leases.Lease{
-			Mac:   mac,
-			Ip:    ip,
+			Mac:   host.Mac,
+			Ip:    host.IP,
 			Begin: now.Add(-1 * time.Minute),
 			End:   now.Add(7 * 24 * time.Hour),
 		})

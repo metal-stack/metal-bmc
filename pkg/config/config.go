@@ -2,6 +2,8 @@ package config
 
 import (
 	"errors"
+	"fmt"
+	"net"
 	"net/netip"
 	"net/url"
 	"strings"
@@ -45,6 +47,11 @@ type Config struct {
 	ConsoleKeyFile    string `required:"false" default:"key.pem" desc:"key file" envconfig:"console_key_file"`
 }
 
+type StaticHost struct {
+	IP  string
+	Mac string
+}
+
 func (c *Config) Validate() error {
 	for _, cidr := range c.AllowedCidrs {
 		_, err := netip.ParsePrefix(cidr)
@@ -53,17 +60,35 @@ func (c *Config) Validate() error {
 		}
 	}
 
-	for _, host := range c.StaticHosts {
-		_, ip, ok := strings.Cut(host, ";")
-		if !ok {
-			return errors.New("static hosts must be provided in the form <mac>;<ip>")
-		}
-
-		_, err := netip.ParseAddr(ip)
-		if err != nil {
-			return err
-		}
+	if _, err := c.ParseStaticHosts(); err != nil {
+		return err
 	}
 
 	return nil
+}
+
+func (c *Config) ParseStaticHosts() ([]*StaticHost, error) {
+	var staticHosts []*StaticHost
+
+	for _, host := range c.StaticHosts {
+		mac, ip, ok := strings.Cut(host, ";")
+		if !ok {
+			return nil, errors.New("static hosts must be provided in the form <mac>;<ip>")
+		}
+
+		if _, err := net.ParseMAC(mac); err != nil {
+			return nil, fmt.Errorf("unable to parse mac address: %w", err)
+		}
+
+		if _, err := netip.ParseAddr(ip); err != nil {
+			return nil, fmt.Errorf("unable to parse ip address: %w", err)
+		}
+
+		staticHosts = append(staticHosts, &StaticHost{
+			IP:  ip,
+			Mac: mac,
+		})
+	}
+
+	return staticHosts, nil
 }
