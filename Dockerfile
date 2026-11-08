@@ -6,7 +6,6 @@ COPY bullseye.sources /etc/apt/sources.list.d/
 RUN apt update \
  && apt install --yes --no-install-recommends \
     ca-certificates \
-    ipmitool=1.8.18-10.1 \
     libvirt-clients \
  # /usr/bin/sum is provided by busybox
  && rm /usr/bin/sum
