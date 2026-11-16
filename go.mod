@@ -8,7 +8,7 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/api v0.10.0
-	github.com/metal-stack/go-hal v0.7.5-0.20261116084233-a0db45f7212c
+	github.com/metal-stack/go-hal v0.7.5-0.20261116121444-249b0cc98b1b
 	github.com/metal-stack/metal-go v0.46.0
 	github.com/metal-stack/metal-lib v0.26.4
 	github.com/metal-stack/v v1.0.3
