@@ -85,25 +85,35 @@ func (c *console) ListenAndServe() error {
 	return s.Serve(listener)
 }
 
-// FIXME broken error handling, should also be printed to the session
 func (c *console) sessionHandler(s ssh.Session) {
-	c.log.Info("ssh session handler called", "machineID", s.User())
 	machineID := s.User()
+	log := c.log.With("machineID", machineID)
+
+	log.Info("ssh session handler called")
+
+	sessionError := func(msg string, err error, attrs ...any) {
+		log.Error(msg, append(attrs, "error", err)...)
+
+		if _, werr := fmt.Fprintf(s, "\r\n%s: %v\r\n", msg, err); werr != nil {
+			c.log.Warn("failed to write error to console", "machineID", machineID, "error", werr)
+		}
+	}
 
 	resp, err := c.client.Machine().FindIPMIMachine(machine.NewFindIPMIMachineParams().WithID(machineID), nil)
-	if err != nil || resp.Payload == nil || resp.Payload.Ipmi == nil {
-		c.log.Error("failed to receive IPMI data", "machineID", machineID, "error", err)
+	if err != nil {
+		sessionError("failed to receive IPMI data", err)
 		return
 	}
+	if resp.Payload == nil || resp.Payload.Ipmi == nil {
+		sessionError("failed to receive IPMI data", errors.New("no IPMI data"))
+		return
+	}
+
 	metalIPMI := resp.Payload.Ipmi
 
 	c.log.Info("connection to", "machineID", machineID)
-	if metalIPMI == nil {
-		c.log.Error("failed to receive IPMI data", "machineID", machineID)
-		return
-	}
 	if metalIPMI.Address == nil {
-		c.log.Error("failed to receive IPMI.Address data", "machineID", machineID)
+		sessionError("failed to receive IPMI address", errors.New("no IPMI address"))
 		return
 	}
 	_, err = io.WriteString(s, fmt.Sprintf("Connecting to console of %q (%s)\n", machineID, *metalIPMI.Address))
@@ -113,18 +123,18 @@ func (c *console) sessionHandler(s ssh.Session) {
 
 	host, portStr, found := strings.Cut(*metalIPMI.Address, ":")
 	if !found {
-		c.log.Error("invalid ipmi address", "address", *metalIPMI.Address)
+		sessionError("invalid IPMI address", fmt.Errorf("%q", *metalIPMI.Address))
 		return
 	}
 	port, err := strconv.Atoi(portStr)
 	if err != nil {
-		c.log.Error("invalid port", "port", port, "address", *metalIPMI.Address)
+		sessionError("invalid IPMI port", err)
 		return
 	}
 
 	ob, err := connect.OutBand(host, port, *metalIPMI.User, *metalIPMI.Password, halslog.New(c.log), new(time.Minute))
 	if err != nil {
-		c.log.Error("failed to out-band connect", "host", host, "port", port, "machineID", machineID, "ipmiuser", *metalIPMI.User)
+		sessionError("failed to out-band connect", err, "host", host, "port", port, "ipmiuser", *metalIPMI.User)
 		return
 	}
 
@@ -133,7 +143,7 @@ func (c *console) sessionHandler(s ssh.Session) {
 		if errors.Is(err, io.EOF) {
 			c.log.Info("console access terminated")
 		} else {
-			c.log.Error("failed to access console", "machineID", machineID, "error", err)
+			sessionError("failed to access console", err)
 		}
 	}
 }
